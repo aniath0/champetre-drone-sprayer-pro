@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,25 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Couleurs personnalisées pour l'application de drone
+				agriculture: {
+					DEFAULT: '#4CAF50', // Vert principal
+					light: '#81C784',
+					dark: '#2E7D32',
+					foreground: '#FFFFFF'
+				},
+				soil: {
+					DEFAULT: '#795548', // Brun pour le sol
+					light: '#A1887F',
+					dark: '#4E342E',
+					foreground: '#FFFFFF'
+				},
+				spray: {
+					DEFAULT: '#03A9F4', // Bleu pour la pulvérisation
+					light: '#4FC3F7',
+					dark: '#0288D1',
+					foreground: '#FFFFFF'
 				}
 			},
 			borderRadius: {
@@ -70,25 +90,27 @@ export default {
 			},
 			keyframes: {
 				'accordion-down': {
-					from: {
-						height: '0'
-					},
-					to: {
-						height: 'var(--radix-accordion-content-height)'
-					}
+					from: { height: '0' },
+					to: { height: 'var(--radix-accordion-content-height)' }
 				},
 				'accordion-up': {
-					from: {
-						height: 'var(--radix-accordion-content-height)'
-					},
-					to: {
-						height: '0'
-					}
+					from: { height: 'var(--radix-accordion-content-height)' },
+					to: { height: '0' }
+				},
+				'pulse-spray': {
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0.5' }
+				},
+				'rotate-propeller': {
+					from: { transform: 'rotate(0deg)' },
+					to: { transform: 'rotate(360deg)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'pulse-spray': 'pulse-spray 2s infinite',
+				'rotate-propeller': 'rotate-propeller 1s linear infinite'
 			}
 		}
 	},

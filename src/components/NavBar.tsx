@@ -1,0 +1,77 @@
+
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { SprayCan, Map, Settings, Smartphone } from 'lucide-react';
+import StatusBadge from './StatusBadge';
+
+interface NavBarProps {
+  droneStatus: 'online' | 'offline' | 'spraying' | 'charging';
+}
+
+const NavBar = ({ droneStatus }: NavBarProps) => {
+  return (
+    <header className="sticky top-0 z-10 w-full bg-background/95 backdrop-blur border-b">
+      <div className="container flex h-16 items-center">
+        <div className="flex items-center mr-4">
+          <SprayCan className="h-6 w-6 text-agriculture-DEFAULT mr-2" />
+          <span className="font-bold">AgriDrone</span>
+        </div>
+        
+        <nav className="flex-1">
+          <ul className="flex space-x-4">
+            <li>
+              <NavLink to="/" exact>
+                <Smartphone className="h-4 w-4 mr-2" />
+                <span>Tableau de bord</span>
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/map">
+                <Map className="h-4 w-4 mr-2" />
+                <span>Carte</span>
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/settings">
+                <Settings className="h-4 w-4 mr-2" />
+                <span>Paramètres</span>
+              </NavLink>
+            </li>
+          </ul>
+        </nav>
+        
+        <div>
+          <StatusBadge status={droneStatus} />
+        </div>
+      </div>
+    </header>
+  );
+};
+
+const NavLink = ({ 
+  to, 
+  children, 
+  exact = false 
+}: { 
+  to: string;
+  children: React.ReactNode;
+  exact?: boolean;
+}) => {
+  const path = window.location.pathname;
+  const isActive = exact ? path === to : path.startsWith(to);
+  
+  return (
+    <Link 
+      to={to} 
+      className={cn(
+        "flex items-center px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors",
+        isActive ? "nav-item active" : ""
+      )}
+    >
+      {children}
+    </Link>
+  );
+};
+
+export default NavBar;
