@@ -9,7 +9,10 @@ defineCustomElements(window);
 
 // Empêcher le zoom sur les appareils mobiles
 document.addEventListener('touchmove', function (event) {
-  if (event.scale !== 1) { event.preventDefault(); }
+  // Checking if the event has multiple touch points (pinch gesture)
+  if (event.touches && event.touches.length > 1) { 
+    event.preventDefault(); 
+  }
 }, { passive: false });
 
 createRoot(document.getElementById("root")!).render(<App />);
