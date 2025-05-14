@@ -4,12 +4,15 @@ import { Toaster } from '@/components/ui/toaster';
 import NavBar from '@/components/NavBar';
 import DroneCamera from '@/components/DroneCamera'; 
 import SprayControls from '@/components/SprayControls';
+import DroneController from '@/components/DroneController';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Map = () => {
   const { toast } = useToast();
   const [isConnected] = useState(true);
   const [isSpraying, setIsSpraying] = useState(false);
+  const isMobile = useIsMobile();
   
   const currentField = {
     id: '1',
@@ -33,14 +36,28 @@ const Map = () => {
     });
   };
 
+  const handleDroneMove = (direction: 'up' | 'down' | 'left' | 'right') => {
+    toast({
+      title: `Déplacement: ${direction}`,
+      description: "Commande envoyée au drone",
+    });
+  };
+
+  const handleAltitudeChange = (direction: 'up' | 'down') => {
+    toast({
+      title: `Altitude: ${direction === 'up' ? 'augmentée' : 'diminuée'}`,
+      description: "Commande envoyée au drone",
+    });
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       <NavBar droneStatus={isSpraying ? 'spraying' : 'online'} />
-      <main className="flex-1 py-6">
-        <div className="container mx-auto p-4 space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <main className="flex-1 py-2">
+        <div className="container mx-auto p-2 space-y-3">
+          <div className={`grid grid-cols-1 ${isMobile ? '' : 'lg:grid-cols-3'} gap-4`}>
             {/* Vue principale de la caméra */}
-            <div className="lg:col-span-2">
+            <div className={isMobile ? "col-span-1" : "lg:col-span-2"}>
               <h2 className="text-lg font-semibold mb-2">Vue caméra drone en direct</h2>
               <DroneCamera 
                 isLive={isConnected} 
@@ -50,15 +67,33 @@ const Map = () => {
               />
             </div>
             
-            {/* Contrôles de pulvérisation */}
-            <div>
-              <h2 className="text-lg font-semibold mb-2">Contrôles</h2>
-              <SprayControls 
-                isConnected={isConnected}
-                currentField={currentField}
-              />
-            </div>
+            {/* Contrôles de pulvérisation - afficher uniquement en mode desktop */}
+            {!isMobile && (
+              <div>
+                <h2 className="text-lg font-semibold mb-2">Contrôles</h2>
+                <SprayControls 
+                  isConnected={isConnected}
+                  currentField={currentField}
+                />
+              </div>
+            )}
           </div>
+          
+          {/* Contrôleur mobile - n'afficher que sur mobile */}
+          {isMobile && (
+            <DroneController 
+              onSprayToggle={(isActive) => {
+                if (isActive) {
+                  handleSprayStart();
+                } else {
+                  handleSprayStop();
+                }
+              }}
+              onMove={handleDroneMove}
+              onAltitudeChange={handleAltitudeChange}
+              isConnected={isConnected}
+            />
+          )}
         </div>
       </main>
       <Toaster />
