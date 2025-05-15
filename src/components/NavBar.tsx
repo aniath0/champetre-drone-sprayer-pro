@@ -11,11 +11,13 @@ interface NavBarProps {
 
 const NavBar = ({ droneStatus }: NavBarProps) => {
   return (
-    <header className="sticky top-0 z-10 w-full bg-background/95 backdrop-blur border-b">
+    <header className="sticky top-0 z-10 w-full bg-gradient-to-r from-background to-primary/5 backdrop-blur border-b">
       <div className="container flex h-16 items-center">
         <div className="flex items-center mr-4">
-          <SprayCan className="h-6 w-6 text-agriculture-DEFAULT mr-2" />
-          <span className="font-bold">AgriDrone</span>
+          <div className="bg-agriculture-DEFAULT p-2 rounded-md">
+            <SprayCan className="h-5 w-5 text-white" />
+          </div>
+          <span className="font-bold ml-2 text-lg text-primary">AgriDrone</span>
         </div>
         
         <nav className="flex-1">
@@ -66,7 +68,9 @@ const NavLink = ({
       to={to} 
       className={cn(
         "flex items-center px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors",
-        isActive ? "nav-item active" : ""
+        isActive 
+          ? "nav-item active font-medium" 
+          : "text-foreground/70 hover:text-foreground"
       )}
     >
       {children}

@@ -51,48 +51,60 @@ const Map = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background to-sidebar/30">
       <NavBar droneStatus={isSpraying ? 'spraying' : 'online'} />
       <main className="flex-1 py-2">
         <div className="container mx-auto p-2 space-y-3">
           <div className={`grid grid-cols-1 ${isMobile ? '' : 'lg:grid-cols-3'} gap-4`}>
             {/* Vue principale de la caméra */}
             <div className={isMobile ? "col-span-1" : "lg:col-span-2"}>
-              <h2 className="text-lg font-semibold mb-2">Vue caméra drone en direct</h2>
-              <DroneCamera 
-                isLive={isConnected} 
-                isRecording={isSpraying}
-                onSprayStart={handleSprayStart}
-                onSprayStop={handleSprayStop}
-              />
+              <h2 className="text-lg font-semibold mb-2 flex items-center">
+                <span className="w-2 h-6 bg-spray-DEFAULT mr-2 rounded-sm"></span>
+                Vue caméra drone en direct
+              </h2>
+              <div className="bg-black/5 backdrop-blur-sm p-3 border border-sidebar-border rounded-lg">
+                <DroneCamera 
+                  isLive={isConnected} 
+                  isRecording={isSpraying}
+                  onSprayStart={handleSprayStart}
+                  onSprayStop={handleSprayStop}
+                />
+              </div>
             </div>
             
             {/* Contrôles de pulvérisation - afficher uniquement en mode desktop */}
             {!isMobile && (
               <div>
-                <h2 className="text-lg font-semibold mb-2">Contrôles</h2>
-                <SprayControls 
-                  isConnected={isConnected}
-                  currentField={currentField}
-                />
+                <h2 className="text-lg font-semibold mb-2 flex items-center">
+                  <span className="w-2 h-6 bg-agriculture-DEFAULT mr-2 rounded-sm"></span>
+                  Contrôles
+                </h2>
+                <div className="bg-black/5 backdrop-blur-sm p-3 border border-sidebar-border rounded-lg h-[calc(100%-2rem)]">
+                  <SprayControls 
+                    isConnected={isConnected}
+                    currentField={currentField}
+                  />
+                </div>
               </div>
             )}
           </div>
           
           {/* Contrôleur mobile - n'afficher que sur mobile */}
           {isMobile && (
-            <DroneController 
-              onSprayToggle={(isActive) => {
-                if (isActive) {
-                  handleSprayStart();
-                } else {
-                  handleSprayStop();
-                }
-              }}
-              onMove={handleDroneMove}
-              onAltitudeChange={handleAltitudeChange}
-              isConnected={isConnected}
-            />
+            <div className="bg-black/5 backdrop-blur-sm p-3 border border-sidebar-border rounded-lg">
+              <DroneController 
+                onSprayToggle={(isActive) => {
+                  if (isActive) {
+                    handleSprayStart();
+                  } else {
+                    handleSprayStop();
+                  }
+                }}
+                onMove={handleDroneMove}
+                onAltitudeChange={handleAltitudeChange}
+                isConnected={isConnected}
+              />
+            </div>
           )}
         </div>
       </main>

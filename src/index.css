@@ -85,6 +85,14 @@
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold;
+  }
+  
+  h2 {
+    @apply text-primary/90;
+  }
 }
 
 @layer components {
@@ -111,5 +119,33 @@
 
   .nav-item.active {
     @apply bg-primary/10 text-primary;
+  }
+  
+  .card-gradient {
+    @apply bg-gradient-to-br from-card to-secondary/20 backdrop-blur-sm;
+  }
+  
+  .colored-section {
+    @apply border-l-4 pl-3 mb-4;
+  }
+  
+  .colored-section.agriculture {
+    @apply border-l-agriculture-DEFAULT bg-agriculture-DEFAULT/5;
+  }
+  
+  .colored-section.spray {
+    @apply border-l-spray-DEFAULT bg-spray-DEFAULT/5;
+  }
+  
+  .colored-section.soil {
+    @apply border-l-soil-DEFAULT bg-soil-DEFAULT/5;
+  }
+  
+  .colored-section.secondary {
+    @apply border-l-secondary bg-secondary/5;
+  }
+  
+  .glass-card {
+    @apply bg-white/50 backdrop-blur-sm border border-white/20 shadow-md;
   }
 }

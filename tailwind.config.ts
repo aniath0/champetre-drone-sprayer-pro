@@ -104,13 +104,22 @@ export default {
 				'rotate-propeller': {
 					from: { transform: 'rotate(0deg)' },
 					to: { transform: 'rotate(360deg)' }
+				},
+				'gradient-background': {
+					'0%, 100%': { backgroundPosition: '0% 50%' },
+					'50%': { backgroundPosition: '100% 50%' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'pulse-spray': 'pulse-spray 2s infinite',
-				'rotate-propeller': 'rotate-propeller 1s linear infinite'
+				'rotate-propeller': 'rotate-propeller 1s linear infinite',
+				'gradient-background': 'gradient-background 15s ease infinite'
+			},
+			backgroundImage: {
+				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+				'section-gradient': 'linear-gradient(to right bottom, var(--tw-gradient-stops))',
 			}
 		}
 	},
