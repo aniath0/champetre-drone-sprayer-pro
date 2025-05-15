@@ -4,7 +4,7 @@ import NavBar from '@/components/NavBar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Settings as SettingsIcon } from 'lucide-react';
+import { Settings as SettingsIcon, Save } from 'lucide-react';
 
 // Import refactored settings components
 import GeneralSettings from '@/components/settings/GeneralSettings';
@@ -24,29 +24,32 @@ const Settings = () => {
     toast({
       title: "Paramètres enregistrés",
       description: "Les nouvelles configurations ont été appliquées",
+      className: "frost-panel",
     });
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-background to-sidebar">
+    <div className="min-h-screen flex flex-col gradient-bg">
       <NavBar droneStatus={'online'} />
       
-      <main className="flex-1 py-6">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center mb-6">
-            <SettingsIcon className="mr-2 h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold">Paramètres</h1>
+      <main className="flex-1 py-8 px-4 animate-fade">
+        <div className="container mx-auto">
+          <div className="flex items-center mb-8 border-b pb-4 border-primary/20">
+            <div className="p-2 rounded-full bg-primary/10 mr-4">
+              <SettingsIcon className="h-8 w-8 text-primary" />
+            </div>
+            <h1 className="text-3xl font-bold">Paramètres</h1>
           </div>
           
-          <Tabs defaultValue="general" className="space-y-4">
-            <TabsList className="bg-sidebar/50 border border-sidebar-border">
-              <TabsTrigger value="general">Général</TabsTrigger>
-              <TabsTrigger value="spray">Pulvérisation</TabsTrigger>
-              <TabsTrigger value="network">Réseau</TabsTrigger>
-              <TabsTrigger value="advanced">Avancé</TabsTrigger>
+          <Tabs defaultValue="general" className="space-y-6">
+            <TabsList className="bg-sidebar/30 border border-sidebar-border rounded-full p-1 w-full md:w-auto">
+              <TabsTrigger value="general" className="rounded-full hover:bg-white/50 transition-colors">Général</TabsTrigger>
+              <TabsTrigger value="spray" className="rounded-full hover:bg-white/50 transition-colors">Pulvérisation</TabsTrigger>
+              <TabsTrigger value="network" className="rounded-full hover:bg-white/50 transition-colors">Réseau</TabsTrigger>
+              <TabsTrigger value="advanced" className="rounded-full hover:bg-white/50 transition-colors">Avancé</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="general">
+            <TabsContent value="general" className="animate-fade">
               <GeneralSettings
                 autoReturn={autoReturn}
                 setAutoReturn={setAutoReturn}
@@ -59,32 +62,39 @@ const Settings = () => {
               />
             </TabsContent>
             
-            <TabsContent value="spray">
+            <TabsContent value="spray" className="animate-fade">
               <SpraySettings 
                 sprayIntensity={sprayIntensity}
                 setSprayIntensity={setSprayIntensity}
               />
             </TabsContent>
             
-            <TabsContent value="network">
+            <TabsContent value="network" className="animate-fade">
               <NetworkSettings />
             </TabsContent>
             
-            <TabsContent value="advanced">
+            <TabsContent value="advanced" className="animate-fade">
               <AdvancedSettings />
             </TabsContent>
           </Tabs>
           
-          <div className="mt-6 flex justify-end">
+          <div className="mt-8 flex justify-end">
             <Button 
-              className="px-8"
+              className="px-8 py-6 hover-glow btn-effect flex items-center gap-2 text-base"
               onClick={handleSave}
             >
-              Sauvegarder
+              <Save className="h-5 w-5" /> 
+              Sauvegarder les paramètres
             </Button>
           </div>
         </div>
       </main>
+      
+      <footer className="py-4 text-center text-sm text-muted-foreground border-t bg-white/60 backdrop-blur-sm">
+        <div className="container">
+          AgriDrone &copy; 2025 - Application de Gestion de Drone Champêtre
+        </div>
+      </footer>
     </div>
   );
 };

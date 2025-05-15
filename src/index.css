@@ -152,4 +152,42 @@
   .glass-card {
     @apply bg-white/50 backdrop-blur-sm border border-white/20 shadow-md;
   }
+
+  /* Nouvelles classes pour améliorer l'apparence */
+  .hover-glow {
+    @apply transition-all duration-300 hover:shadow-lg hover:shadow-primary/20;
+  }
+  
+  .gradient-bg {
+    @apply bg-gradient-to-br from-background to-accent/30 animate-gradient-background;
+  }
+  
+  .frost-panel {
+    @apply bg-white/80 backdrop-blur-md border border-white/30 shadow-xl;
+  }
+  
+  .content-panel {
+    @apply rounded-lg p-6 transition-all;
+  }
+  
+  .section-title {
+    @apply text-xl font-semibold mb-4 border-b pb-2 border-primary/20;
+  }
+  
+  .input-focused {
+    @apply focus:ring-2 focus:ring-primary/30 focus:border-primary/50;
+  }
+  
+  .btn-effect {
+    @apply active:scale-95 transition-transform;
+  }
+  
+  .animate-fade {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 }
