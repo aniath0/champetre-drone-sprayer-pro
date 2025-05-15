@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -42,6 +43,10 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    
+    --spray: 198 97% 48%;
+    --spray-light: 199 92% 64%;
+    --spray-dark: 200 98% 41%;
   }
 
   .dark {
@@ -133,7 +138,7 @@
   }
   
   .colored-section.spray {
-    @apply border-l-spray-DEFAULT bg-spray-DEFAULT/5;
+    @apply border-l-[#03A9F4] bg-[#03A9F4]/5;
   }
   
   .colored-section.soil {
