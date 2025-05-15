@@ -4,13 +4,14 @@ import NavBar from '@/components/NavBar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Settings as SettingsIcon, Save } from 'lucide-react';
+import { Settings as SettingsIcon, Save, BatteryMedium } from 'lucide-react';
 
 // Import refactored settings components
 import GeneralSettings from '@/components/settings/GeneralSettings';
 import SpraySettings from '@/components/settings/SpraySettings';
 import NetworkSettings from '@/components/settings/NetworkSettings';
 import AdvancedSettings from '@/components/settings/AdvancedSettings';
+import BatterySettings from '@/components/settings/BatterySettings';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -19,12 +20,22 @@ const Settings = () => {
   const [sprayIntensity, setSprayIntensity] = useState(75);
   const [flySpeed, setFlySpeed] = useState(50);
   const [droneName, setDroneName] = useState("AgriDrone-01");
+  const [batteryThreshold, setBatteryThreshold] = useState(20);
+  const [emergencyReturn, setEmergencyReturn] = useState(true);
   
   const handleSave = () => {
     toast({
       title: "Paramètres enregistrés",
       description: "Les nouvelles configurations ont été appliquées",
       className: "frost-panel",
+    });
+  };
+
+  const handleEmergencyReturn = () => {
+    toast({
+      title: "Retour d'urgence activé",
+      description: "Le drone revient à sa position de départ",
+      variant: "destructive",
     });
   };
 
@@ -42,9 +53,10 @@ const Settings = () => {
           </div>
           
           <Tabs defaultValue="general" className="space-y-6">
-            <TabsList className="bg-sidebar/30 border border-sidebar-border rounded-full p-1 w-full md:w-auto">
+            <TabsList className="bg-sidebar/30 border border-sidebar-border rounded-full p-1 w-full md:w-auto flex flex-wrap">
               <TabsTrigger value="general" className="rounded-full hover:bg-white/50 transition-colors">Général</TabsTrigger>
               <TabsTrigger value="spray" className="rounded-full hover:bg-white/50 transition-colors">Pulvérisation</TabsTrigger>
+              <TabsTrigger value="battery" className="rounded-full hover:bg-white/50 transition-colors">Batterie</TabsTrigger>
               <TabsTrigger value="network" className="rounded-full hover:bg-white/50 transition-colors">Réseau</TabsTrigger>
               <TabsTrigger value="advanced" className="rounded-full hover:bg-white/50 transition-colors">Avancé</TabsTrigger>
             </TabsList>
@@ -66,6 +78,16 @@ const Settings = () => {
               <SpraySettings 
                 sprayIntensity={sprayIntensity}
                 setSprayIntensity={setSprayIntensity}
+              />
+            </TabsContent>
+            
+            <TabsContent value="battery" className="animate-fade">
+              <BatterySettings 
+                batteryThreshold={batteryThreshold}
+                setBatteryThreshold={setBatteryThreshold}
+                emergencyReturn={emergencyReturn}
+                setEmergencyReturn={setEmergencyReturn}
+                onEmergencyReturn={handleEmergencyReturn}
               />
             </TabsContent>
             
