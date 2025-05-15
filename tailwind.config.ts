@@ -63,21 +63,21 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Couleurs personnalisées pour l'application de drone
+				// Custom colors for the drone application
 				agriculture: {
-					DEFAULT: '#4CAF50', // Vert principal
+					DEFAULT: '#4CAF50', // Green for agriculture
 					light: '#81C784',
 					dark: '#2E7D32',
 					foreground: '#FFFFFF'
 				},
 				soil: {
-					DEFAULT: '#795548', // Brun pour le sol
+					DEFAULT: '#795548', // Brown for soil
 					light: '#A1887F',
 					dark: '#4E342E',
 					foreground: '#FFFFFF'
 				},
 				spray: {
-					DEFAULT: '#03A9F4', // Bleu pour la pulvérisation
+					DEFAULT: '#03A9F4', // Blue for spraying
 					light: '#4FC3F7',
 					dark: '#0288D1',
 					foreground: '#FFFFFF'
