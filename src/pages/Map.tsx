@@ -3,8 +3,6 @@ import React, { useState } from 'react';
 import { Toaster } from '@/components/ui/toaster';
 import NavBar from '@/components/NavBar';
 import DroneCamera from '@/components/DroneCamera'; 
-import SprayControls from '@/components/SprayControls';
-import DroneController from '@/components/DroneController';
 import MapView from '@/components/MapView';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -63,17 +61,15 @@ const Map = () => {
                 <span className="w-2 h-6 bg-spray-DEFAULT mr-2 rounded-sm"></span>
                 Vue caméra drone en direct
               </h2>
-              <div className="bg-black/5 backdrop-blur-sm p-3 border border-sidebar-border rounded-lg">
-                <DroneCamera 
-                  isLive={isConnected} 
-                  isRecording={isSpraying}
-                  onSprayStart={handleSprayStart}
-                  onSprayStop={handleSprayStop}
-                />
+              <div className="bg-black/5 backdrop-blur-sm p-3 border border-sidebar-border rounded-lg min-h-[200px] flex items-center justify-center">
+                {/* La zone pour la caméra de drone est maintenant vide comme demandé */}
+                <div className="text-center text-muted-foreground">
+                  <p className="text-sm">Connectez-vous au drone pour activer la vue caméra</p>
+                </div>
               </div>
             </div>
             
-            {/* Carte de visualisation - remplace les contrôles de pulvérisation */}
+            {/* Carte de visualisation pour la délimitation de zones */}
             <div className={isMobile ? "col-span-1 order-1" : ""}>
               <h2 className="text-lg font-semibold mb-2 flex items-center">
                 <span className="w-2 h-6 bg-agriculture-DEFAULT mr-2 rounded-sm"></span>
@@ -84,24 +80,6 @@ const Map = () => {
               </div>
             </div>
           </div>
-          
-          {/* Contrôleur mobile - n'afficher que sur mobile */}
-          {isMobile && (
-            <div className="bg-black/5 backdrop-blur-sm p-3 border border-sidebar-border rounded-lg">
-              <DroneController 
-                onSprayToggle={(isActive) => {
-                  if (isActive) {
-                    handleSprayStart();
-                  } else {
-                    handleSprayStop();
-                  }
-                }}
-                onMove={handleDroneMove}
-                onAltitudeChange={handleAltitudeChange}
-                isConnected={isConnected}
-              />
-            </div>
-          )}
         </div>
       </main>
       <Toaster />
