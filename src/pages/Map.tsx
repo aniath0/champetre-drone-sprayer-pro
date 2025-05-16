@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { Toaster } from '@/components/ui/toaster';
 import NavBar from '@/components/NavBar';
-import DroneCamera from '@/components/DroneCamera'; 
 import MapView from '@/components/MapView';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -53,16 +52,16 @@ const Map = () => {
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-background to-sidebar/30">
       <NavBar droneStatus={isSpraying ? 'spraying' : 'online'} />
       <main className="flex-1 py-2">
-        <div className="container mx-auto p-2 space-y-3">
-          <div className={`grid grid-cols-1 ${isMobile ? '' : 'lg:grid-cols-3'} gap-4`}>
+        <div className="container mx-auto p-2">
+          <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-3 gap-6'}`}>
             {/* Vue principale de la caméra */}
-            <div className={isMobile ? "col-span-1 order-2" : "lg:col-span-2"}>
+            <div className={isMobile ? "order-2" : "col-span-2"}>
               <h2 className="text-lg font-semibold mb-2 flex items-center">
                 <span className="w-2 h-6 bg-spray-DEFAULT mr-2 rounded-sm"></span>
                 Vue caméra drone en direct
               </h2>
-              <div className="bg-black/5 backdrop-blur-sm p-3 border border-sidebar-border rounded-lg min-h-[200px] flex items-center justify-center">
-                {/* La zone pour la caméra de drone est maintenant vide comme demandé */}
+              <div className="bg-black/5 backdrop-blur-sm p-3 border border-sidebar-border rounded-lg min-h-[300px] flex items-center justify-center">
+                {/* La zone pour la caméra de drone est vide comme demandé */}
                 <div className="text-center text-muted-foreground">
                   <p className="text-sm">Connectez-vous au drone pour activer la vue caméra</p>
                 </div>
@@ -70,14 +69,12 @@ const Map = () => {
             </div>
             
             {/* Carte de visualisation pour la délimitation de zones */}
-            <div className={isMobile ? "col-span-1 order-1" : ""}>
+            <div className={isMobile ? "order-1" : ""}>
               <h2 className="text-lg font-semibold mb-2 flex items-center">
                 <span className="w-2 h-6 bg-agriculture-DEFAULT mr-2 rounded-sm"></span>
                 Cartographie terrain
               </h2>
-              <div className="bg-black/5 backdrop-blur-sm p-3 border border-sidebar-border rounded-lg h-[calc(100%-2rem)]">
-                <MapView />
-              </div>
+              <MapView />
             </div>
           </div>
         </div>

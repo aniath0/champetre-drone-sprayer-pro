@@ -31,9 +31,9 @@ const Dashboard = () => {
   ];
   
   return (
-    <div className="container mx-auto p-4 space-y-6">
+    <div className="space-y-6">
       {/* Statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         <StatCard 
           title="Surface Traitée"
           value="18 ha"
@@ -57,10 +57,10 @@ const Dashboard = () => {
         />
       </div>
       
-      {/* Conteneur principal */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Conteneur principal - fixed layout with better responsiveness */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Colonne de gauche */}
-        <div className="space-y-6">
+        <div className="lg:col-span-4 space-y-6">
           <DroneStatus 
             batteryLevel={75} 
             signalStrength={92} 
@@ -73,8 +73,8 @@ const Dashboard = () => {
           />
         </div>
         
-        {/* Colonne du milieu - Carte */}
-        <div className="lg:col-span-2 space-y-6">
+        {/* Colonne du milieu et droite - Carte et historique */}
+        <div className="lg:col-span-8 space-y-6">
           <SprayMap 
             fields={fields}
             onSelectField={(field) => {
