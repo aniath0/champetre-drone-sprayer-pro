@@ -57,10 +57,10 @@ const Dashboard = () => {
         />
       </div>
       
-      {/* Conteneur principal - fixed layout with better responsiveness */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      {/* Conteneur principal - improved layout to ensure all components are visible */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Colonne de gauche */}
-        <div className="lg:col-span-4 space-y-6">
+        <div className="lg:col-span-1 space-y-6">
           <DroneStatus 
             batteryLevel={75} 
             signalStrength={92} 
@@ -73,8 +73,8 @@ const Dashboard = () => {
           />
         </div>
         
-        {/* Colonne du milieu et droite - Carte et historique */}
-        <div className="lg:col-span-8 space-y-6">
+        {/* Colonne du milieu - Carte */}
+        <div className="lg:col-span-1">
           <SprayMap 
             fields={fields}
             onSelectField={(field) => {
@@ -86,6 +86,10 @@ const Dashboard = () => {
             }}
             currentDronePosition={[48.8566, 2.3522]}
           />
+        </div>
+        
+        {/* Colonne de droite - Historique de pulvérisation */}
+        <div className="lg:col-span-1">
           <SprayHistory records={sprayHistory} />
         </div>
       </div>
