@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Layers, MapPin, Navigation, Map, Square, MousePointer, MousePointerClick } from 'lucide-react';
 import { fabric } from 'fabric';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MapViewProps {
   className?: string;
@@ -23,14 +24,20 @@ const MapView = ({ className }: MapViewProps) => {
   const [activePolygon, setActivePolygon] = useState<fabric.Polygon | null>(null);
   const [zones, setZones] = useState<Zone[]>([]);
   const [coverage, setCoverage] = useState<number>(0);
+  const isMobile = useIsMobile();
+  
+  // Calcul de la hauteur du canvas en fonction de l'appareil
+  const canvasHeight = isMobile ? 250 : 300;
 
   // Initialiser le canvas Fabric
   useEffect(() => {
     if (!canvasRef.current) return;
 
+    const canvasWidth = canvasRef.current.parentElement?.offsetWidth || (isMobile ? 320 : 400);
+    
     const fabricCanvas = new fabric.Canvas(canvasRef.current, {
-      width: canvasRef.current.parentElement?.offsetWidth || 400,
-      height: 300,
+      width: canvasWidth,
+      height: canvasHeight,
       backgroundColor: '#F2FCE2'
     });
 
@@ -44,8 +51,8 @@ const MapView = ({ className }: MapViewProps) => {
 
     // Marquer la position du drone avec un point rouge
     const droneMarker = new fabric.Circle({
-      left: 180,
-      top: 150,
+      left: canvasWidth / 2 - 6,
+      top: canvasHeight / 2 - 6,
       radius: 6,
       fill: 'red',
       stroke: 'white',
@@ -66,11 +73,29 @@ const MapView = ({ className }: MapViewProps) => {
 
     setCanvas(fabricCanvas);
 
+    // Adaptation de la taille du canvas en fonction du redimensionnement de la fenêtre
+    const handleResize = () => {
+      if (!canvasRef.current) return;
+      const newWidth = canvasRef.current.parentElement?.offsetWidth || (isMobile ? 320 : 400);
+      fabricCanvas.setWidth(newWidth);
+      fabricCanvas.setHeight(canvasHeight);
+      
+      // Redimensionner l'arrière-plan si nécessaire
+      if (fabricCanvas.backgroundImage) {
+        const bgImg = fabricCanvas.backgroundImage as fabric.Image;
+        bgImg.scaleToWidth(newWidth);
+        fabricCanvas.renderAll();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
     // Nettoyer le canvas quand le composant est démonté
     return () => {
+      window.removeEventListener('resize', handleResize);
       fabricCanvas.dispose();
     };
-  }, []);
+  }, [isMobile, canvasHeight]);
 
   // Configurer le mode de dessin
   useEffect(() => {
@@ -224,17 +249,17 @@ const MapView = ({ className }: MapViewProps) => {
               size="sm" 
               variant={mode === 'draw' ? "default" : "outline"} 
               onClick={handleModeToggle}
-              className="h-8"
+              className="h-8 text-xs sm:text-sm"
             >
               {mode === 'draw' ? (
                 <>
-                  <MousePointer className="h-4 w-4 mr-1" />
-                  Sélectionner
+                  <MousePointer className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                  <span className="hidden xs:inline">Sélectionner</span>
                 </>
               ) : (
                 <>
-                  <Square className="h-4 w-4 mr-1" />
-                  Délimiter zone
+                  <Square className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                  <span className="hidden xs:inline">Délimiter zone</span>
                 </>
               )}
             </Button>
@@ -251,7 +276,7 @@ const MapView = ({ className }: MapViewProps) => {
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="map-visualization rounded-md overflow-hidden h-[300px] relative">
+        <div className={`map-visualization rounded-md overflow-hidden relative`} style={{ height: `${canvasHeight}px` }}>
           {/* Canvas pour la carte interactive */}
           <div className="absolute inset-0">
             <canvas ref={canvasRef} className="border-none" />
@@ -259,26 +284,26 @@ const MapView = ({ className }: MapViewProps) => {
           
           {/* Contrôles de la carte */}
           <div className="absolute bottom-3 right-3 flex flex-col gap-2">
-            <Button size="sm" variant="outline" className="bg-white/90 h-8 w-8 p-0">
-              <Navigation className="h-4 w-4" />
+            <Button size="sm" variant="outline" className="bg-white/90 h-7 w-7 sm:h-8 sm:w-8 p-0">
+              <Navigation className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
-            <Button size="sm" variant="outline" className="bg-white/90 h-8 w-8 p-0">
-              <MapPin className="h-4 w-4" />
+            <Button size="sm" variant="outline" className="bg-white/90 h-7 w-7 sm:h-8 sm:w-8 p-0">
+              <MapPin className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
             <Button 
               size="sm" 
               variant="outline" 
-              className="bg-white/90 h-8 w-8 p-0" 
+              className="bg-white/90 h-7 w-7 sm:h-8 sm:w-8 p-0" 
               onClick={clearZones}
             >
-              <Map className="h-4 w-4" />
+              <Map className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </div>
           
           {/* Informations sur la carte */}
           <div className="absolute bottom-3 left-3 bg-white/80 backdrop-blur-sm p-2 rounded text-xs shadow-sm">
             <div className="font-medium">Parcelle Nord</div>
-            <div className="text-muted-foreground">48.8566° N, 2.3522° E</div>
+            <div className="text-muted-foreground text-[10px] sm:text-xs">48.8566° N, 2.3522° E</div>
             <div className="mt-1 flex items-center">
               <span className="inline-block h-2 w-2 rounded-full bg-green-500 mr-1"></span>
               <span>Couverture: {coverage.toFixed(1)}%</span>
