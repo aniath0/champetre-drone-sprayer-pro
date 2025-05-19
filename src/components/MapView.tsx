@@ -3,7 +3,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Map as MapIcon, LassoSelect, MousePointerClick } from 'lucide-react';
-import { fabric } from 'fabric';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Polygon } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -41,14 +40,35 @@ const MapView = ({ className, mode, isSpraying, onAreasSelected }: MapViewProps)
     setDrawingMode(mode);
   }, [mode]);
   
-  // Calculate approximate area of a polygon in square meters
+  // Calculate approximate area of a polygon in square meters using Haversine formula
   const calculatePolygonArea = (positions: L.LatLngExpression[]): number => {
     if (positions.length < 3) return 0;
     
+    // Convert positions to LatLng objects if they're arrays
     const latLngs = positions.map(pos => Array.isArray(pos) ? L.latLng(pos[0], pos[1]) : pos);
-    const polygon = L.polygon(latLngs);
-    // Get approximate area in square meters
-    return Math.round(L.GeometryUtil.geodesicArea(polygon.getLatLngs()[0]));
+    
+    // Basic implementation of polygon area calculation
+    let area = 0;
+    const R = 6371000; // Earth radius in meters
+    
+    for (let i = 0; i < latLngs.length; i++) {
+      const j = (i + 1) % latLngs.length;
+      const p1 = latLngs[i] as L.LatLng;
+      const p2 = latLngs[j] as L.LatLng;
+      
+      // Convert to radians
+      const lat1 = p1.lat * Math.PI / 180;
+      const lat2 = p2.lat * Math.PI / 180;
+      const lon1 = p1.lng * Math.PI / 180;
+      const lon2 = p2.lng * Math.PI / 180;
+      
+      // Calculate area component
+      area += (lon2 - lon1) * (2 + Math.sin(lat1) + Math.sin(lat2));
+    }
+    
+    // Finalize calculation
+    area = Math.abs(area * R * R / 2);
+    return Math.round(area);
   };
   
   // Add a rectangular selection zone
