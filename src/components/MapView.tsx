@@ -2,8 +2,25 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Map, LassoSelect, MousePointerClick } from 'lucide-react';
-import * as fabric from 'fabric';
+import { Map as MapIcon, LassoSelect, MousePointerClick } from 'lucide-react';
+import { fabric } from 'fabric';
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polygon } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Icon setup for Leaflet
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+// Setup default Leaflet icons
+const DefaultIcon = L.icon({
+  iconUrl: icon,
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41]
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
 
 interface MapViewProps {
   className?: string;
@@ -13,127 +30,104 @@ interface MapViewProps {
 }
 
 const MapView = ({ className, mode, isSpraying, onAreasSelected }: MapViewProps) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [canvas, setCanvas] = useState<fabric.Canvas | null>(null);
-  const [selectedAreas, setSelectedAreas] = useState<fabric.Object[]>([]);
+  const [mapCenter] = useState<[number, number]>([48.8566, 2.3522]); // Paris by default
+  const zoom = 14;
+  const [selectedAreas, setSelectedAreas] = useState<any[]>([]);
   const [drawingMode, setDrawingMode] = useState<'select' | 'draw'>(mode);
-  
-  useEffect(() => {
-    if (canvasRef.current && !canvas) {
-      const fabricCanvas = new fabric.Canvas(canvasRef.current, {
-        width: canvasRef.current.offsetWidth,
-        height: 300,
-        selection: true,
-        backgroundColor: '#f8f9fa'
-      });
-      
-      setCanvas(fabricCanvas);
-      
-      // Load a field map background (simulated agricultural field)
-      fabric.Image.fromURL('/placeholder.svg', (img) => {
-        img.scaleToWidth(fabricCanvas.width!);
-        fabricCanvas.setBackgroundImage(img, fabricCanvas.renderAll.bind(fabricCanvas));
-      });
-      
-      fabricCanvas.on('selection:created', handleSelection);
-      fabricCanvas.on('selection:updated', handleSelection);
-      
-      return () => {
-        fabricCanvas.dispose();
-      };
-    }
-  }, [canvasRef]);
+  const [polygons, setPolygons] = useState<Array<{ id: string, positions: L.LatLngExpression[], color: string }>>([]);
   
   // Update drawing mode when prop changes
   useEffect(() => {
     setDrawingMode(mode);
-    if (canvas) {
-      if (mode === 'draw') {
-        canvas.isDrawingMode = true;
-        canvas.freeDrawingBrush.width = 3;
-        canvas.freeDrawingBrush.color = '#3B82F6';
-      } else {
-        canvas.isDrawingMode = false;
-      }
-      canvas.renderAll();
-    }
-  }, [mode, canvas]);
+  }, [mode]);
   
-  // Handle selection update
-  const handleSelection = (e: fabric.IEvent) => {
-    if (!canvas) return;
+  // Calculate approximate area of a polygon in square meters
+  const calculatePolygonArea = (positions: L.LatLngExpression[]): number => {
+    if (positions.length < 3) return 0;
     
-    // Store selected objects
-    const selected = canvas.getActiveObjects();
-    
-    // Change selection color to indicate it's selected
-    selected.forEach(obj => {
-      if (obj.type === 'path') {
-        obj.set({
-          stroke: '#1E40AF',
-          strokeWidth: 4
-        });
-      } else {
-        obj.set({
-          borderColor: '#1E40AF',
-          cornerColor: '#1E40AF'
-        });
-      }
-    });
-    
-    setSelectedAreas(selected);
-    canvas.renderAll();
-    
-    // Notify parent of selected areas
-    onAreasSelected(selected.map(obj => {
-      return {
-        id: obj.data?.id || Math.random().toString(36).substring(2, 15),
-        type: obj.type,
-        area: calculateArea(obj)
-      };
-    }));
+    const latLngs = positions.map(pos => Array.isArray(pos) ? L.latLng(pos[0], pos[1]) : pos);
+    const polygon = L.polygon(latLngs);
+    // Get approximate area in square meters
+    return Math.round(L.GeometryUtil.geodesicArea(polygon.getLatLngs()[0]));
   };
   
-  // Calculate approximate area of an object
-  const calculateArea = (obj: fabric.Object) => {
-    if (!obj.width || !obj.height) return 0;
-    return Math.round(obj.width * obj.height / 100);
-  };
-  
-  // Create a rectangular selection
+  // Add a rectangular selection zone
   const addRectangle = () => {
-    if (!canvas) return;
+    // Create a rectangle around the center point
+    const centerLat = mapCenter[0];
+    const centerLng = mapCenter[1];
+    const offset = 0.005; // Approximately 500m depending on latitude
     
-    const rect = new fabric.Rect({
-      left: 50,
-      top: 50,
-      fill: 'rgba(59, 130, 246, 0.3)',
-      width: 100,
-      height: 100,
-      objectCaching: false,
-      stroke: '#3B82F6',
-      strokeWidth: 2,
-      strokeUniform: true,
-      data: { id: Math.random().toString(36).substring(2, 15) }
-    });
+    const newRectangle = {
+      id: Math.random().toString(36).substring(2, 15),
+      positions: [
+        [centerLat - offset, centerLng - offset],
+        [centerLat - offset, centerLng + offset],
+        [centerLat + offset, centerLng + offset],
+        [centerLat + offset, centerLng - offset]
+      ] as L.LatLngExpression[],
+      color: '#3B82F6'
+    };
     
-    canvas.add(rect);
-    canvas.setActiveObject(rect);
-    canvas.renderAll();
+    setPolygons([...polygons, newRectangle]);
+    const polygonArea = calculatePolygonArea(newRectangle.positions);
+    
+    // Update selected areas
+    const newSelectedArea = {
+      id: newRectangle.id,
+      type: 'polygon',
+      area: polygonArea
+    };
+    
+    const updatedSelectedAreas = [...selectedAreas, newSelectedArea];
+    setSelectedAreas(updatedSelectedAreas);
+    onAreasSelected(updatedSelectedAreas);
+  };
+  
+  // Handle polygon selection
+  const handlePolygonClick = (polygon: any) => {
+    if (drawingMode !== 'select') return;
+    
+    // Toggle selection
+    const isSelected = selectedAreas.some(area => area.id === polygon.id);
+    
+    if (isSelected) {
+      const filtered = selectedAreas.filter(area => area.id !== polygon.id);
+      setSelectedAreas(filtered);
+      onAreasSelected(filtered);
+      
+      // Update polygon color
+      setPolygons(polygons.map(p => 
+        p.id === polygon.id ? { ...p, color: '#3B82F6' } : p
+      ));
+    } else {
+      const polygonArea = calculatePolygonArea(polygon.positions);
+      const newSelectedArea = {
+        id: polygon.id,
+        type: 'polygon',
+        area: polygonArea
+      };
+      
+      const updated = [...selectedAreas, newSelectedArea];
+      setSelectedAreas(updated);
+      onAreasSelected(updated);
+      
+      // Update polygon color to indicate selection
+      setPolygons(polygons.map(p => 
+        p.id === polygon.id ? { ...p, color: '#1E40AF' } : p
+      ));
+    }
   };
   
   // Clear all selections
   const clearSelections = () => {
-    if (!canvas) return;
-    
-    canvas.getObjects().forEach(obj => {
-      canvas.remove(obj);
-    });
-    
+    setPolygons([]);
     setSelectedAreas([]);
     onAreasSelected([]);
-    canvas.renderAll();
   };
+
+  // Calculate total selected area
+  const totalSelectedArea = selectedAreas.reduce((sum, area) => sum + area.area, 0);
   
   return (
     <Card className={`${className || ''}`}>
@@ -146,7 +140,7 @@ const MapView = ({ className, mode, isSpraying, onAreasSelected }: MapViewProps)
               size="sm"
               onClick={addRectangle}
             >
-              <Map className="h-4 w-4 mr-1" />
+              <MapIcon className="h-4 w-4 mr-1" />
               Ajouter zone
             </Button>
             
@@ -190,7 +184,34 @@ const MapView = ({ className, mode, isSpraying, onAreasSelected }: MapViewProps)
         </div>
         
         <div className="border border-dashed border-gray-300 rounded-md h-[300px] relative">
-          <canvas ref={canvasRef} className="absolute inset-0 w-full h-full"></canvas>
+          <MapContainer 
+            center={mapCenter}
+            zoom={zoom}
+            style={{ height: '100%', width: '100%' }}
+            zoomControl={false}
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            
+            {/* Display all polygon zones */}
+            {polygons.map(polygon => (
+              <Polygon 
+                key={polygon.id}
+                positions={polygon.positions}
+                pathOptions={{
+                  color: polygon.color,
+                  weight: 3,
+                  fillOpacity: 0.3,
+                  fillColor: polygon.color
+                }}
+                eventHandlers={{
+                  click: () => handlePolygonClick(polygon)
+                }}
+              />
+            ))}
+          </MapContainer>
           
           {isSpraying && (
             <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
@@ -204,7 +225,7 @@ const MapView = ({ className, mode, isSpraying, onAreasSelected }: MapViewProps)
         
         {selectedAreas.length > 0 && (
           <div className="mt-4 text-sm">
-            <span className="font-medium">Surface totale:</span> {selectedAreas.reduce((sum, obj) => sum + calculateArea(obj), 0)} m²
+            <span className="font-medium">Surface totale:</span> {totalSelectedArea} m²
           </div>
         )}
       </CardContent>
