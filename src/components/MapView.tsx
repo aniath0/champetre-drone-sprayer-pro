@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Layers, MapPin, Navigation, Map, Square, MousePointer, MousePointerClick, LassoSelect, SprayCan } from 'lucide-react';
-import * as fabric from 'fabric';
+import { Canvas, Point, Polygon, Line, Circle, Image, Object as FabricObject } from 'fabric';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MapViewProps {
@@ -15,15 +15,24 @@ interface MapViewProps {
 
 interface Zone {
   id: string;
-  points: fabric.Point[];
+  points: Point[];
   selected: boolean;
   sprayed: boolean;
 }
 
+// Interface personnalisée pour étendre les objets Fabric avec des propriétés personnalisées
+interface CustomFabricObject extends FabricObject {
+  customData?: {
+    id?: string;
+    selected?: boolean;
+    sprayed?: boolean;
+  };
+}
+
 const MapView = ({ className, mode, isSpraying, onAreasSelected }: MapViewProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [canvas, setCanvas] = useState<fabric.Canvas | null>(null);
-  const [activePolygon, setActivePolygon] = useState<fabric.Polygon | null>(null);
+  const [canvas, setCanvas] = useState<Canvas | null>(null);
+  const [activePolygon, setActivePolygon] = useState<Polygon | null>(null);
   const [zones, setZones] = useState<Zone[]>([]);
   const [coverage, setCoverage] = useState<number>(0);
   const [selectedZones, setSelectedZones] = useState<Zone[]>([]);
@@ -39,22 +48,20 @@ const MapView = ({ className, mode, isSpraying, onAreasSelected }: MapViewProps)
 
     const canvasWidth = canvasRef.current.parentElement?.offsetWidth || (isMobile ? 320 : 400);
     
-    const fabricCanvas = new fabric.Canvas(canvasRef.current, {
+    const fabricCanvas = new Canvas(canvasRef.current, {
       width: canvasWidth,
       height: canvasHeight,
       backgroundColor: '#F2FCE2'
     });
 
     // Ajouter une image de carte agricole comme arrière-plan
-    fabric.Image.fromURL('https://i.imgur.com/jYPXRLQ.jpg', (img) => {
-      img.scaleToWidth(fabricCanvas.width!);
-      fabricCanvas.setBackgroundImage(img, fabricCanvas.renderAll.bind(fabricCanvas), {
-        opacity: 0.7
-      });
+    Image.fromURL('https://i.imgur.com/jYPXRLQ.jpg', (img) => {
+      img.scaleToWidth(fabricCanvas.getWidth());
+      fabricCanvas.setBackgroundImage(img, fabricCanvas.renderAll.bind(fabricCanvas));
     });
 
     // Marquer la position du drone avec un point rouge
-    const droneMarker = new fabric.Circle({
+    const droneMarker = new Circle({
       left: canvasWidth / 2 - 6,
       top: canvasHeight / 2 - 6,
       radius: 6,
@@ -68,7 +75,7 @@ const MapView = ({ className, mode, isSpraying, onAreasSelected }: MapViewProps)
     
     // Ajouter une animation de pulsation pour le marqueur du drone
     (function animate() {
-      droneMarker.animate('opacity', droneMarker.opacity === 1 ? 0.5 : 1, {
+      droneMarker.animate('opacity', droneMarker.get('opacity') === 1 ? 0.5 : 1, {
         duration: 1000,
         onChange: fabricCanvas.renderAll.bind(fabricCanvas),
         onComplete: animate
@@ -85,8 +92,8 @@ const MapView = ({ className, mode, isSpraying, onAreasSelected }: MapViewProps)
       fabricCanvas.setHeight(canvasHeight);
       
       // Redimensionner l'arrière-plan si nécessaire
-      if (fabricCanvas.backgroundImage) {
-        const bgImg = fabricCanvas.backgroundImage as fabric.Image;
+      const bgImg = fabricCanvas.backgroundImage;
+      if (bgImg) {
         bgImg.scaleToWidth(newWidth);
         fabricCanvas.renderAll();
       }
@@ -108,7 +115,7 @@ const MapView = ({ className, mode, isSpraying, onAreasSelected }: MapViewProps)
     // Réinitialiser les écouteurs d'événements
     canvas.off('mouse:down');
     canvas.off('mouse:dblclick');
-    canvas.off('object:selected');
+    canvas.off('mouse:up');
     canvas.off('selection:created');
     
     if (mode === 'draw') {
@@ -118,23 +125,23 @@ const MapView = ({ className, mode, isSpraying, onAreasSelected }: MapViewProps)
       // Réinitialiser le polygone actif si on change de mode
       setActivePolygon(null);
       
-      let points: fabric.Point[] = [];
-      let lines: fabric.Line[] = [];
+      let points: Point[] = [];
+      let lines: Line[] = [];
       let isDrawing = false;
       
       canvas.on('mouse:down', (options) => {
         if (!isDrawing) {
           isDrawing = true;
           const pointer = canvas.getPointer(options.e);
-          points = [new fabric.Point(pointer.x, pointer.y)];
+          points = [new Point(pointer.x, pointer.y)];
         } else {
           const pointer = canvas.getPointer(options.e);
-          points.push(new fabric.Point(pointer.x, pointer.y));
+          points.push(new Point(pointer.x, pointer.y));
           
           // Dessiner une ligne entre les deux derniers points
           if (points.length >= 2) {
             const lastIndex = points.length - 1;
-            const line = new fabric.Line(
+            const line = new Line(
               [points[lastIndex-1].x, points[lastIndex-1].y, points[lastIndex].x, points[lastIndex].y],
               {
                 stroke: '#9b87f5',
@@ -154,7 +161,7 @@ const MapView = ({ className, mode, isSpraying, onAreasSelected }: MapViewProps)
               canvas.remove(activePolygon);
             }
             
-            const polygon = new fabric.Polygon(points, {
+            const polygon = new Polygon(points, {
               fill: 'rgba(155, 135, 245, 0.3)',
               stroke: '#9b87f5',
               strokeWidth: 2,
@@ -179,9 +186,18 @@ const MapView = ({ className, mode, isSpraying, onAreasSelected }: MapViewProps)
         
         // Finaliser le polygone
         if (activePolygon) {
+          const newZoneId = `zone-${Date.now()}`;
           const newZone: Zone = {
-            id: `zone-${Date.now()}`,
+            id: newZoneId,
             points: [...points],
+            selected: false,
+            sprayed: false
+          };
+          
+          // Attacher l'ID de la zone au polygone
+          const polygonWithData = activePolygon as CustomFabricObject;
+          polygonWithData.customData = {
+            id: newZoneId,
             selected: false,
             sprayed: false
           };
@@ -189,7 +205,7 @@ const MapView = ({ className, mode, isSpraying, onAreasSelected }: MapViewProps)
           setZones(prev => [...prev, newZone]);
           
           // Calculer la couverture approximative
-          const totalArea = canvas.width! * canvas.height!;
+          const totalArea = canvas.getWidth() * canvas.getHeight();
           const zoneArea = getPolygonArea(points);
           setCoverage(prev => Math.min(100, prev + (zoneArea / totalArea) * 100));
           
@@ -204,11 +220,18 @@ const MapView = ({ className, mode, isSpraying, onAreasSelected }: MapViewProps)
       canvas.selection = true;
       
       // Permettre la sélection des polygones
-      canvas.on('object:selected', (options) => {
-        const selectedObject = options.target;
-        if (selectedObject && selectedObject.type === 'polygon') {
-          const zoneId = selectedObject.data?.id;
-          if (zoneId) {
+      canvas.on('mouse:up', (options) => {
+        const pointer = canvas.getPointer(options.e);
+        const objects = canvas.getObjects().filter(obj => obj.type === 'polygon');
+        
+        // Vérifier si un polygone a été cliqué
+        for (const obj of objects) {
+          const polygon = obj as CustomFabricObject;
+          if (polygon.containsPoint(pointer) && polygon.customData) {
+            const zoneId = polygon.customData.id;
+            if (!zoneId) continue;
+            
+            // Inverser l'état de sélection de la zone
             setZones(prev => prev.map(z => 
               z.id === zoneId 
                 ? { ...z, selected: !z.selected } 
@@ -216,14 +239,15 @@ const MapView = ({ className, mode, isSpraying, onAreasSelected }: MapViewProps)
             ));
             
             // Mettre à jour l'apparence du polygone
-            selectedObject.set({
-              fill: selectedObject.data?.selected 
-                ? 'rgba(155, 135, 245, 0.3)'  // Non sélectionné 
-                : 'rgba(229, 222, 255, 0.5)', // Sélectionné
-              stroke: selectedObject.data?.selected 
-                ? '#9b87f5' 
-                : '#7b67d5'
+            const isSelected = !polygon.customData.selected;
+            polygon.set({
+              fill: isSelected ? 'rgba(66, 153, 225, 0.5)' : 'rgba(155, 135, 245, 0.3)',
+              stroke: isSelected ? '#1E90FF' : '#9b87f5'
             });
+            
+            // Mettre à jour les données personnalisées
+            polygon.customData.selected = isSelected;
+            
             canvas.renderAll();
             
             // Mettre à jour les zones sélectionnées
@@ -232,9 +256,13 @@ const MapView = ({ className, mode, isSpraying, onAreasSelected }: MapViewProps)
                 ? { ...z, selected: !z.selected } 
                 : z
             );
+            
             const selected = updatedZones.filter(z => z.selected);
             setSelectedZones(selected);
             onAreasSelected(selected);
+            
+            // Arrêter après avoir traité un polygone
+            break;
           }
         }
       });
@@ -244,7 +272,7 @@ const MapView = ({ className, mode, isSpraying, onAreasSelected }: MapViewProps)
       if (canvas) {
         canvas.off('mouse:down');
         canvas.off('mouse:dblclick');
-        canvas.off('object:selected');
+        canvas.off('mouse:up');
         canvas.off('selection:created');
       }
     };
@@ -259,18 +287,24 @@ const MapView = ({ className, mode, isSpraying, onAreasSelected }: MapViewProps)
       const updatedZones = zones.map(zone => {
         if (selectedZones.some(selectedZone => selectedZone.id === zone.id)) {
           // Trouver le polygone correspondant dans le canvas
-          const objects = canvas.getObjects('polygon');
-          const polygonObj = objects.find(obj => obj.data?.id === zone.id);
-          
-          if (polygonObj) {
-            polygonObj.set({
-              fill: 'rgba(249, 115, 22, 0.4)',  // Couleur de pulvérisation
-              stroke: '#F97316'
-            });
-            polygonObj.data = { ...polygonObj.data, sprayed: true };
+          const objects = canvas.getObjects().filter(obj => obj.type === 'polygon');
+          for (const obj of objects) {
+            const polygon = obj as CustomFabricObject;
+            if (polygon.customData && polygon.customData.id === zone.id) {
+              polygon.set({
+                fill: 'rgba(249, 115, 22, 0.4)',
+                stroke: '#F97316'
+              });
+              polygon.customData.sprayed = true;
+              polygon.customData.selected = false;
+            }
           }
           
-          return { ...zone, sprayed: true, selected: false };
+          return {
+            ...zone,
+            sprayed: true,
+            selected: false
+          };
         }
         return zone;
       });
@@ -283,7 +317,7 @@ const MapView = ({ className, mode, isSpraying, onAreasSelected }: MapViewProps)
   }, [isSpraying, selectedZones, zones, canvas]);
 
   // Fonction utilitaire pour calculer l'aire d'un polygone
-  const getPolygonArea = (points: fabric.Point[]): number => {
+  const getPolygonArea = (points: Point[]): number => {
     let area = 0;
     for (let i = 0; i < points.length; i++) {
       let j = (i + 1) % points.length;
@@ -300,7 +334,7 @@ const MapView = ({ className, mode, isSpraying, onAreasSelected }: MapViewProps)
     // Supprimer tous les objets sauf le marqueur du drone
     const objects = canvas.getObjects();
     objects.forEach(obj => {
-      if (obj.type !== 'circle') { // Ne pas supprimer le marqueur du drone
+      if (obj.type !== 'circle') {
         canvas.remove(obj);
       }
     });
