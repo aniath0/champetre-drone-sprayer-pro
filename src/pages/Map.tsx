@@ -17,6 +17,38 @@ const Map = () => {
   const [selectedAreas, setSelectedAreas] = useState<any[]>([]);
   const isMobile = useIsMobile();
   
+  // Coordonnées réalistes pour des champs agricoles
+  const fields = [
+    { 
+      id: '1', 
+      name: 'Parcelle Nord', 
+      coordinates: [48.8566, 2.3522] as [number, number], // Paris (exemple)
+      size: 5, 
+      status: 'pending' as const 
+    },
+    { 
+      id: '2', 
+      name: 'Parcelle Sud', 
+      coordinates: [48.8516, 2.3591] as [number, number], // Un peu au sud-est
+      size: 3, 
+      status: 'completed' as const 
+    },
+    { 
+      id: '3', 
+      name: 'Parcelle Est', 
+      coordinates: [48.8606, 2.3612] as [number, number], // Un peu au nord-est
+      size: 4, 
+      status: 'pending' as const 
+    },
+    { 
+      id: '4', 
+      name: 'Parcelle Ouest', 
+      coordinates: [48.8526, 2.3422] as [number, number], // Un peu au sud-ouest
+      size: 6, 
+      status: 'in-progress' as const 
+    },
+  ];
+  
   const currentField = {
     id: '1',
     name: 'Parcelle Nord',

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import DroneStatus from './DroneStatus';
 import SprayMap from './SprayMap';
@@ -16,12 +15,12 @@ const Dashboard = () => {
     size: number;
   } | undefined>(undefined);
   
-  // Données simulées
+  // Données simulées avec des coordonnées GPS réelles
   const fields = [
     { id: '1', name: 'Parcelle Nord', coordinates: [48.8566, 2.3522] as [number, number], size: 5, status: 'pending' as const },
-    { id: '2', name: 'Parcelle Sud', coordinates: [48.8566, 2.3622] as [number, number], size: 3, status: 'completed' as const },
-    { id: '3', name: 'Parcelle Est', coordinates: [48.8666, 2.3522] as [number, number], size: 4, status: 'pending' as const },
-    { id: '4', name: 'Parcelle Ouest', coordinates: [48.8466, 2.3422] as [number, number], size: 6, status: 'in-progress' as const },
+    { id: '2', name: 'Parcelle Sud', coordinates: [48.8516, 2.3591] as [number, number], size: 3, status: 'completed' as const },
+    { id: '3', name: 'Parcelle Est', coordinates: [48.8606, 2.3612] as [number, number], size: 4, status: 'pending' as const },
+    { id: '4', name: 'Parcelle Ouest', coordinates: [48.8526, 2.3422] as [number, number], size: 6, status: 'in-progress' as const },
   ];
   
   const sprayHistory = [
