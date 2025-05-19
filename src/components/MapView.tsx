@@ -3,27 +3,32 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Layers, MapPin, Navigation, Map, Square, MousePointer, MousePointerClick } from 'lucide-react';
+import { Layers, MapPin, Navigation, Map, Square, MousePointer, MousePointerClick, LassoSelect, SprayCan } from 'lucide-react';
 import { fabric } from 'fabric';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MapViewProps {
   className?: string;
+  mode: 'select' | 'draw';
+  isSpraying: boolean;
+  onAreasSelected: (areas: Zone[]) => void;
 }
 
 interface Zone {
   id: string;
   points: fabric.Point[];
   selected: boolean;
+  sprayed: boolean;
 }
 
-const MapView = ({ className }: MapViewProps) => {
+const MapView = ({ className, mode, isSpraying, onAreasSelected }: MapViewProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [canvas, setCanvas] = useState<fabric.Canvas | null>(null);
-  const [mode, setMode] = useState<'select' | 'draw'>('select');
   const [activePolygon, setActivePolygon] = useState<fabric.Polygon | null>(null);
   const [zones, setZones] = useState<Zone[]>([]);
   const [coverage, setCoverage] = useState<number>(0);
+  const [selectedZones, setSelectedZones] = useState<Zone[]>([]);
+  const [sprayedZones, setSprayedZones] = useState<Zone[]>([]);
   const isMobile = useIsMobile();
   
   // Calcul de la hauteur du canvas en fonction de l'appareil
@@ -97,10 +102,16 @@ const MapView = ({ className }: MapViewProps) => {
     };
   }, [isMobile, canvasHeight]);
 
-  // Configurer le mode de dessin
+  // Configurer le mode de dessin ou de sélection
   useEffect(() => {
     if (!canvas) return;
 
+    // Réinitialiser les écouteurs d'événements
+    canvas.off('mouse:down');
+    canvas.off('mouse:dblclick');
+    canvas.off('object:selected');
+    canvas.off('selection:created');
+    
     if (mode === 'draw') {
       // Activer le dessin de polygones
       canvas.selection = false;
@@ -127,7 +138,7 @@ const MapView = ({ className }: MapViewProps) => {
             const line = new fabric.Line(
               [points[lastIndex-1].x, points[lastIndex-1].y, points[lastIndex].x, points[lastIndex].y],
               {
-                stroke: '#FF8C00',
+                stroke: '#9b87f5',
                 strokeWidth: 2,
                 selectable: false,
                 evented: false
@@ -145,8 +156,8 @@ const MapView = ({ className }: MapViewProps) => {
             }
             
             const polygon = new fabric.Polygon(points, {
-              fill: 'rgba(255, 140, 0, 0.3)',
-              stroke: '#FF8C00',
+              fill: 'rgba(155, 135, 245, 0.3)',
+              stroke: '#9b87f5',
               strokeWidth: 2,
               selectable: true
             });
@@ -172,7 +183,8 @@ const MapView = ({ className }: MapViewProps) => {
           const newZone: Zone = {
             id: `zone-${Date.now()}`,
             points: [...points],
-            selected: true
+            selected: false,
+            sprayed: false
           };
           
           setZones(prev => [...prev, newZone]);
@@ -191,18 +203,86 @@ const MapView = ({ className }: MapViewProps) => {
     } else {
       // Mode sélection
       canvas.selection = true;
-      canvas.off('mouse:down');
-      canvas.off('mouse:dblclick');
+      
+      // Permettre la sélection des polygones
+      canvas.on('object:selected', (options) => {
+        const selectedObject = options.target;
+        if (selectedObject && selectedObject.type === 'polygon') {
+          const zoneId = selectedObject.data?.id;
+          if (zoneId) {
+            setZones(prev => prev.map(z => 
+              z.id === zoneId 
+                ? { ...z, selected: !z.selected } 
+                : z
+            ));
+            
+            // Mettre à jour l'apparence du polygone
+            selectedObject.set({
+              fill: selectedObject.data?.selected 
+                ? 'rgba(155, 135, 245, 0.3)'  // Non sélectionné 
+                : 'rgba(229, 222, 255, 0.5)', // Sélectionné
+              stroke: selectedObject.data?.selected 
+                ? '#9b87f5' 
+                : '#7b67d5'
+            });
+            canvas.renderAll();
+            
+            // Mettre à jour les zones sélectionnées
+            const updatedZones = zones.map(z => 
+              z.id === zoneId 
+                ? { ...z, selected: !z.selected } 
+                : z
+            );
+            const selected = updatedZones.filter(z => z.selected);
+            setSelectedZones(selected);
+            onAreasSelected(selected);
+          }
+        }
+      });
     }
     
     return () => {
       if (canvas) {
         canvas.off('mouse:down');
         canvas.off('mouse:dblclick');
+        canvas.off('object:selected');
+        canvas.off('selection:created');
       }
     };
-  }, [mode, canvas, activePolygon]);
-  
+  }, [mode, canvas, activePolygon, zones, onAreasSelected]);
+
+  // Gérer la pulvérisation des zones sélectionnées
+  useEffect(() => {
+    if (!canvas) return;
+    
+    if (isSpraying && selectedZones.length > 0) {
+      // Marquer les zones comme pulvérisées
+      const updatedZones = zones.map(zone => {
+        if (selectedZones.some(selectedZone => selectedZone.id === zone.id)) {
+          // Trouver le polygone correspondant dans le canvas
+          const objects = canvas.getObjects('polygon');
+          const polygonObj = objects.find(obj => obj.data?.id === zone.id);
+          
+          if (polygonObj) {
+            polygonObj.set({
+              fill: 'rgba(249, 115, 22, 0.4)',  // Couleur de pulvérisation
+              stroke: '#F97316'
+            });
+            polygonObj.data = { ...polygonObj.data, sprayed: true };
+          }
+          
+          return { ...zone, sprayed: true, selected: false };
+        }
+        return zone;
+      });
+      
+      setZones(updatedZones);
+      setSprayedZones(updatedZones.filter(z => z.sprayed));
+      setSelectedZones([]);
+      canvas.renderAll();
+    }
+  }, [isSpraying, selectedZones, zones, canvas]);
+
   // Fonction utilitaire pour calculer l'aire d'un polygone
   const getPolygonArea = (points: fabric.Point[]): number => {
     let area = 0;
@@ -212,11 +292,6 @@ const MapView = ({ className }: MapViewProps) => {
       area -= points[j].x * points[i].y;
     }
     return Math.abs(area / 2);
-  };
-  
-  // Gérer le changement de mode
-  const handleModeToggle = () => {
-    setMode(prev => prev === 'select' ? 'draw' : 'select');
   };
   
   // Effacer toutes les zones
@@ -232,9 +307,16 @@ const MapView = ({ className }: MapViewProps) => {
     });
     
     setZones([]);
+    setSelectedZones([]);
+    setSprayedZones([]);
     setCoverage(0);
     setActivePolygon(null);
   };
+
+  // Calculer le pourcentage de couverture pulvérisée
+  const sprayedCoverage = zones.length === 0 
+    ? 0 
+    : (sprayedZones.length / zones.length) * coverage;
 
   return (
     <Card className={`h-full border border-sidebar-border bg-card/80 backdrop-blur-sm ${className}`}>
@@ -248,18 +330,18 @@ const MapView = ({ className }: MapViewProps) => {
             <Button 
               size="sm" 
               variant={mode === 'draw' ? "default" : "outline"} 
-              onClick={handleModeToggle}
               className="h-8 text-xs sm:text-sm"
+              disabled // Contrôlé par le parent maintenant
             >
               {mode === 'draw' ? (
                 <>
-                  <MousePointer className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                  <span className="hidden xs:inline">Sélectionner</span>
+                  <LassoSelect className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                  <span className="hidden xs:inline">Délimiter</span>
                 </>
               ) : (
                 <>
-                  <Square className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                  <span className="hidden xs:inline">Délimiter zone</span>
+                  <MousePointerClick className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                  <span className="hidden xs:inline">Sélectionner</span>
                 </>
               )}
             </Button>
@@ -269,10 +351,11 @@ const MapView = ({ className }: MapViewProps) => {
         <CardDescription className="text-xs">
           {mode === 'draw' 
             ? 'Cliquez pour créer des points et double-cliquez pour terminer une zone' 
-            : 'Vue aérienne'} 
+            : 'Sélectionnez les zones à pulvériser'} 
           • {zones.length > 0 
               ? `${zones.length} zone(s) définie(s)` 
               : 'Aucune zone définie'}
+          {selectedZones.length > 0 && ` • ${selectedZones.length} sélectionnée(s)`}
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0">
@@ -308,6 +391,12 @@ const MapView = ({ className }: MapViewProps) => {
               <span className="inline-block h-2 w-2 rounded-full bg-green-500 mr-1"></span>
               <span>Couverture: {coverage.toFixed(1)}%</span>
             </div>
+            {sprayedZones.length > 0 && (
+              <div className="flex items-center">
+                <span className="inline-block h-2 w-2 rounded-full bg-orange-500 mr-1"></span>
+                <span>Pulvérisé: {sprayedCoverage.toFixed(1)}%</span>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
