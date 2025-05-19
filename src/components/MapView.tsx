@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Layers, MapPin, Navigation, Map, Square, MousePointer, MousePointerClick, LassoSelect, SprayCan } from 'lucide-react';
-import { fabric } from 'fabric';
+import * as fabric from 'fabric';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MapViewProps {
