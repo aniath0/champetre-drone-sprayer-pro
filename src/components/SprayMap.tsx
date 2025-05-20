@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { MapPin } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -25,13 +25,12 @@ L.Marker.prototype.options.icon = DefaultIcon;
 const DroneCenterMap = ({ position }: { position: [number, number] }) => {
   const map = useMap();
   React.useEffect(() => {
-    map.setView(position, map.getZoom());
+    if (map) {
+      map.setView(position, map.getZoom());
+    }
   }, [map, position]);
   return null;
 };
-
-// Import useMap hook from react-leaflet
-import { useMap } from 'react-leaflet';
 
 interface FieldArea {
   id: string;
@@ -128,17 +127,24 @@ const SprayMap = ({ fields, onSelectField, currentDronePosition }: SprayMapProps
             {/* Afficher la position du drone si disponible */}
             {currentDronePosition && (
               <>
-                <Marker position={currentDronePosition} icon={droneIcon}>
+                <Marker 
+                  position={currentDronePosition} 
+                  icon={droneIcon}
+                  eventHandlers={{}}
+                >
                   <Popup>Position actuelle du drone</Popup>
                 </Marker>
                 {/* Use the DroneCenterMap component conditionally with a key */}
-                <DroneCenterMap key={`drone-center-${currentDronePosition.join(',')}`} position={currentDronePosition} />
+                <DroneCenterMap 
+                  key={`drone-center-${currentDronePosition.join(',')}`} 
+                  position={currentDronePosition} 
+                />
               </>
             )}
           </MapContainer>
         </div>
         
-        {/* Liste des zones disponibles (maintenue pour la compatibilité) */}
+        {/* Liste des zones disponibles */}
         <div className="absolute bottom-4 left-4 right-4 bg-white/90 dark:bg-gray-800/90 p-3 rounded-md shadow-md">
           <h4 className="font-medium text-xs mb-2">Zones disponibles</h4>
           <div className="grid grid-cols-2 gap-2">

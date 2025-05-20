@@ -33,7 +33,7 @@ const MapToolbar: React.FC<MapToolbarProps> = ({
           <Button 
             variant="outline" 
             size="sm"
-            onClick={onAddRectangle}
+            onClick={() => onAddRectangle()}
           >
             <MapIcon className="h-4 w-4 mr-1" />
             Ajouter zone
@@ -42,7 +42,7 @@ const MapToolbar: React.FC<MapToolbarProps> = ({
           <Button 
             variant="outline" 
             size="sm"
-            onClick={onClearSelections}
+            onClick={() => onClearSelections()}
           >
             Effacer tout
           </Button>
