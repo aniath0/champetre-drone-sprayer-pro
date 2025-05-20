@@ -36,7 +36,8 @@ interface SprayMapProps {
 }
 
 const SprayMap = ({ fields, onSelectField, currentDronePosition }: SprayMapProps) => {
-  const [mapCenter] = React.useState<[number, number]>([48.8566, 2.3522]); // Paris par défaut
+  // Using only React.useState to avoid potential hooks issues
+  const mapCenter = React.useState<[number, number]>([48.8566, 2.3522])[0]; // Paris by default
   const zoom = 14;
 
   // Custom icons for different statuses
@@ -64,9 +65,6 @@ const SprayMap = ({ fields, onSelectField, currentDronePosition }: SprayMapProps
     iconSize: [18, 18],
     iconAnchor: [9, 9]
   });
-  
-  // Generate a unique key to force proper rendering of MapContainer
-  const mapKey = `map-${mapCenter.join(',')}-${zoom}-${fields.length}-${currentDronePosition?.join(',') || 'no-drone'}-${Date.now()}`;
 
   return (
     <Card className="h-full">
@@ -83,7 +81,7 @@ const SprayMap = ({ fields, onSelectField, currentDronePosition }: SprayMapProps
       <CardContent className="p-0 relative">
         <div className="h-[350px] w-full rounded-md overflow-hidden">
           <MapContainer 
-            key={mapKey}
+            key={`map-${Date.now()}`} 
             center={mapCenter} 
             zoom={zoom} 
             style={{ height: '100%', width: '100%' }}
@@ -118,7 +116,7 @@ const SprayMap = ({ fields, onSelectField, currentDronePosition }: SprayMapProps
             
             {currentDronePosition && (
               <Marker 
-                key={`drone-${currentDronePosition.join(',')}`}
+                key={`drone-${Date.now()}`}
                 position={currentDronePosition} 
                 icon={droneIcon}
               >

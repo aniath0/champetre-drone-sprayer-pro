@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { calculatePolygonArea } from '@/utils/mapUtils';
 import SprayMap from './map/SprayMap';
@@ -33,13 +33,12 @@ const MapView: React.FC<MapViewProps> = ({ className, mode, isSpraying, onAreasS
   const [polygons, setPolygons] = useState<PolygonData[]>([]);
   
   // Update drawing mode when prop changes
-  useEffect(() => {
+  React.useEffect(() => {
     setDrawingMode(mode);
   }, [mode]);
   
   // Add a rectangular selection zone
   const addRectangle = () => {
-    // Create a rectangle around the center point
     const centerLat = mapCenter[0];
     const centerLng = mapCenter[1];
     const offset = 0.005; // Approximately 500m depending on latitude
@@ -55,7 +54,7 @@ const MapView: React.FC<MapViewProps> = ({ className, mode, isSpraying, onAreasS
       color: '#3B82F6'
     };
     
-    setPolygons([...polygons, newRectangle]);
+    setPolygons(prev => [...prev, newRectangle]);
     const polygonArea = calculatePolygonArea(newRectangle.positions);
     
     // Update selected areas

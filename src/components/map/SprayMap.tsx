@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import MapPolygon from './MapPolygon';
 import { LatLngExpression } from 'leaflet';
@@ -32,13 +32,10 @@ const SprayMap: React.FC<SprayMapProps> = ({
     setupDefaultLeafletIcon();
   }, []);
 
-  // Generate a unique key for proper MapContainer re-rendering
-  const mapKey = `map-${center.join(',')}-${zoom}-${polygons.length}-${Date.now()}`;
-  
   return (
     <div className="border border-dashed border-gray-300 rounded-md h-[300px] relative">
       <MapContainer 
-        key={mapKey}
+        key={`map-${Date.now()}`}
         center={center}
         zoom={zoom}
         style={{ height: '100%', width: '100%' }}
