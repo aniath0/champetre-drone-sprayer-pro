@@ -45,7 +45,6 @@ const SprayMap: React.FC<SprayMapProps> = ({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         
-        {/* Display all polygon zones */}
         {polygons.map(polygon => (
           <MapPolygon 
             key={polygon.id}

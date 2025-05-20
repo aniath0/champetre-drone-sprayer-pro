@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { MapPin } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -24,9 +24,14 @@ L.Marker.prototype.options.icon = DefaultIcon;
 // Composant pour centrer la carte sur la position actuelle du drone
 const DroneCenterMap = ({ position }: { position: [number, number] }) => {
   const map = useMap();
-  map.setView(position, map.getZoom());
+  React.useEffect(() => {
+    map.setView(position, map.getZoom());
+  }, [map, position]);
   return null;
 };
+
+// Import useMap hook from react-leaflet
+import { useMap } from 'react-leaflet';
 
 interface FieldArea {
   id: string;
@@ -126,7 +131,8 @@ const SprayMap = ({ fields, onSelectField, currentDronePosition }: SprayMapProps
                 <Marker position={currentDronePosition} icon={droneIcon}>
                   <Popup>Position actuelle du drone</Popup>
                 </Marker>
-                <DroneCenterMap position={currentDronePosition} />
+                {/* Use the DroneCenterMap component conditionally with a key */}
+                <DroneCenterMap key={`drone-center-${currentDronePosition.join(',')}`} position={currentDronePosition} />
               </>
             )}
           </MapContainer>
