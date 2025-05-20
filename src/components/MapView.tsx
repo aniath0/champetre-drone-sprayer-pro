@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { setupDefaultLeafletIcon, calculatePolygonArea } from '@/utils/mapUtils';
+import { calculatePolygonArea } from '@/utils/mapUtils';
 import SprayMap from './map/SprayMap';
 import MapToolbar from './map/MapToolbar';
 import { LatLngExpression } from 'leaflet';

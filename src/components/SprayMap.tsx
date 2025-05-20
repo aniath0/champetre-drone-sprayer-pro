@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { MapPin } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,11 +7,11 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Correction pour les icônes Leaflet en React
+// Fix for Leaflet icons in React
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
-// Définir une icône par défaut pour Leaflet
+// Define default icon for Leaflet
 let DefaultIcon = L.icon({
   iconUrl: icon,
   shadowUrl: iconShadow,
@@ -36,16 +36,16 @@ interface SprayMapProps {
 }
 
 const SprayMap = ({ fields, onSelectField, currentDronePosition }: SprayMapProps) => {
-  const [mapCenter] = useState<[number, number]>([48.8566, 2.3522]); // Paris par défaut
+  const [mapCenter] = React.useState<[number, number]>([48.8566, 2.3522]); // Paris par défaut
   const zoom = 14;
 
-  // Icônes personnalisées pour différents statuts
+  // Custom icons for different statuses
   const getMarkerIcon = (status: string) => {
     const iconColor = status === 'completed' 
-      ? '#10B981' // Vert pour terminé
+      ? '#10B981' // Green for completed
       : status === 'in-progress'
-        ? '#F97316' // Orange pour en cours
-        : '#9b87f5'; // Violet pour en attente
+        ? '#F97316' // Orange for in-progress
+        : '#9b87f5'; // Purple for pending
     
     return L.divIcon({
       className: 'custom-marker',
@@ -55,7 +55,7 @@ const SprayMap = ({ fields, onSelectField, currentDronePosition }: SprayMapProps
     });
   };
   
-  // Icône spéciale pour le drone
+  // Special icon for drone
   const droneIcon = L.divIcon({
     className: 'drone-marker',
     html: `<div style="background-color: #F43F5E; width: 18px; height: 18px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;">
@@ -65,8 +65,8 @@ const SprayMap = ({ fields, onSelectField, currentDronePosition }: SprayMapProps
     iconAnchor: [9, 9]
   });
   
-  // Générer une clé unique pour forcer le bon rendu de MapContainer
-  const mapKey = `map-${mapCenter.join(',')}-${zoom}-${fields.length}`;
+  // Generate a unique key to force proper rendering of MapContainer
+  const mapKey = `map-${mapCenter.join(',')}-${zoom}-${fields.length}-${currentDronePosition?.join(',') || 'no-drone'}-${Date.now()}`;
 
   return (
     <Card className="h-full">
@@ -118,6 +118,7 @@ const SprayMap = ({ fields, onSelectField, currentDronePosition }: SprayMapProps
             
             {currentDronePosition && (
               <Marker 
+                key={`drone-${currentDronePosition.join(',')}`}
                 position={currentDronePosition} 
                 icon={droneIcon}
               >
@@ -127,7 +128,7 @@ const SprayMap = ({ fields, onSelectField, currentDronePosition }: SprayMapProps
           </MapContainer>
         </div>
         
-        {/* Liste des zones disponibles */}
+        {/* Available zones list */}
         <div className="absolute bottom-4 left-4 right-4 bg-white/90 dark:bg-gray-800/90 p-3 rounded-md shadow-md">
           <h4 className="font-medium text-xs mb-2">Zones disponibles</h4>
           <div className="grid grid-cols-2 gap-2">
