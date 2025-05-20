@@ -6,8 +6,9 @@ import MapView from '@/components/MapView';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import DroneController from '@/components/DroneController';
-import { Button } from '@/components/ui/button';
-import { LassoSelect, SprayCan, MousePointerClick } from 'lucide-react';
+import MapHeader from '@/components/map/MapHeader';
+import CameraDroneView from '@/components/map/CameraDroneView';
+import { getFieldsData } from '@/components/map/FieldData';
 
 const Map = () => {
   const { toast } = useToast();
@@ -17,50 +18,11 @@ const Map = () => {
   const [selectedAreas, setSelectedAreas] = useState<any[]>([]);
   const isMobile = useIsMobile();
   
-  // Coordonnées réalistes pour des champs agricoles
-  const fields = [
-    { 
-      id: '1', 
-      name: 'Parcelle Nord', 
-      coordinates: [48.8566, 2.3522] as [number, number], // Paris (exemple)
-      size: 5, 
-      status: 'pending' as const 
-    },
-    { 
-      id: '2', 
-      name: 'Parcelle Sud', 
-      coordinates: [48.8516, 2.3591] as [number, number], // Un peu au sud-est
-      size: 3, 
-      status: 'completed' as const 
-    },
-    { 
-      id: '3', 
-      name: 'Parcelle Est', 
-      coordinates: [48.8606, 2.3612] as [number, number], // Un peu au nord-est
-      size: 4, 
-      status: 'pending' as const 
-    },
-    { 
-      id: '4', 
-      name: 'Parcelle Ouest', 
-      coordinates: [48.8526, 2.3422] as [number, number], // Un peu au sud-ouest
-      size: 6, 
-      status: 'in-progress' as const 
-    },
-  ];
-  
+  // Current field mockup - this would normally be from a selection
   const currentField = {
     id: '1',
     name: 'Parcelle Nord',
     size: 5
-  };
-
-  const handleModeChange = (mode: 'select' | 'draw') => {
-    setSelectedMode(mode);
-    toast({
-      title: mode === 'draw' ? "Mode délimitation activé" : "Mode sélection activé",
-      description: mode === 'draw' ? "Dessinez les zones à pulvériser" : "Sélectionnez les zones à pulvériser",
-    });
   };
 
   const handleSprayStart = () => {
@@ -86,6 +48,14 @@ const Map = () => {
       title: "Pulvérisation arrêtée",
       description: "La pulvérisation a été interrompue",
     });
+  };
+
+  const handleSprayToggle = () => {
+    isSpraying ? handleSprayStop() : handleSprayStart();
+  };
+
+  const handleModeChange = (mode: 'select' | 'draw') => {
+    setSelectedMode(mode);
   };
 
   const handleDroneMove = (direction: 'up' | 'down' | 'left' | 'right') => {
@@ -118,52 +88,14 @@ const Map = () => {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
             {/* Vue principale de la caméra */}
             <div className={`${isMobile ? "order-2" : ""} md:col-span-2`}>
-              <div className="flex items-center justify-between mb-2">
-                <h2 className="text-lg font-semibold flex items-center">
-                  <span className="w-2 h-6 bg-spray-DEFAULT mr-2 rounded-sm"></span>
-                  Vue caméra drone en direct
-                </h2>
-                
-                {/* Contrôles de pulvérisation */}
-                <div className="flex items-center gap-2">
-                  <Button 
-                    size="sm" 
-                    variant={selectedMode === 'draw' ? 'default' : 'outline'}
-                    onClick={() => handleModeChange('draw')}
-                    className="h-8"
-                  >
-                    <LassoSelect className="h-4 w-4 mr-1" />
-                    <span className="hidden xs:inline">Délimiter</span>
-                  </Button>
-                  
-                  <Button 
-                    size="sm" 
-                    variant={selectedMode === 'select' ? 'default' : 'outline'}
-                    onClick={() => handleModeChange('select')}
-                    className="h-8"
-                  >
-                    <MousePointerClick className="h-4 w-4 mr-1" />
-                    <span className="hidden xs:inline">Sélectionner</span>
-                  </Button>
-                  
-                  <Button 
-                    size="sm" 
-                    variant={isSpraying ? 'destructive' : 'default'}
-                    onClick={isSpraying ? handleSprayStop : handleSprayStart}
-                    className="h-8"
-                    disabled={!selectedAreas.length && !isSpraying}
-                  >
-                    <SprayCan className="h-4 w-4 mr-1" />
-                    <span className="hidden xs:inline">{isSpraying ? 'Arrêter' : 'Pulvériser'}</span>
-                  </Button>
-                </div>
-              </div>
-              <div className="bg-black/5 backdrop-blur-sm p-3 border border-sidebar-border rounded-lg min-h-[250px] sm:min-h-[300px] flex items-center justify-center">
-                {/* La zone pour la caméra de drone est vide comme demandé */}
-                <div className="text-center text-muted-foreground">
-                  <p className="text-sm">Connectez-vous au drone pour activer la vue caméra</p>
-                </div>
-              </div>
+              <MapHeader 
+                selectedMode={selectedMode}
+                onModeChange={handleModeChange}
+                isSpraying={isSpraying}
+                onSprayToggle={handleSprayToggle}
+                selectedAreasCount={selectedAreas.length}
+              />
+              <CameraDroneView />
             </div>
             
             {/* Carte de visualisation pour la délimitation de zones */}
