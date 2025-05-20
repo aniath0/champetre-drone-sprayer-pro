@@ -6,11 +6,6 @@ import { LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { setupDefaultLeafletIcon } from '@/utils/mapUtils';
 
-// Initialize Leaflet icons
-useEffect(() => {
-  setupDefaultLeafletIcon();
-}, []);
-
 interface PolygonData {
   id: string;
   positions: LatLngExpression[];
