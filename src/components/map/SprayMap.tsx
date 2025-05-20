@@ -1,9 +1,15 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import MapPolygon from './MapPolygon';
 import { LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { setupDefaultLeafletIcon } from '@/utils/mapUtils';
+
+// Initialize Leaflet icons
+useEffect(() => {
+  setupDefaultLeafletIcon();
+}, []);
 
 interface PolygonData {
   id: string;
@@ -26,6 +32,11 @@ const SprayMap: React.FC<SprayMapProps> = ({
   isSpraying, 
   onPolygonClick 
 }) => {
+  // Initialize Leaflet icons
+  useEffect(() => {
+    setupDefaultLeafletIcon();
+  }, []);
+  
   return (
     <div className="border border-dashed border-gray-300 rounded-md h-[300px] relative">
       <MapContainer 

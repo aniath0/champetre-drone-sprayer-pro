@@ -16,6 +16,10 @@ const MapPolygon: React.FC<MapPolygonProps> = ({
   color, 
   onClick 
 }) => {
+  const handleClick = () => {
+    onClick(id, positions);
+  };
+
   return (
     <Polygon 
       positions={positions}
@@ -26,7 +30,7 @@ const MapPolygon: React.FC<MapPolygonProps> = ({
         fillColor: color
       }}
       eventHandlers={{
-        click: () => onClick(id, positions)
+        click: handleClick
       }}
     />
   );

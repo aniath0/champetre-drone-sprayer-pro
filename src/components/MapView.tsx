@@ -6,9 +6,6 @@ import SprayMap from './map/SprayMap';
 import MapToolbar from './map/MapToolbar';
 import { LatLngExpression } from 'leaflet';
 
-// Initialize leaflet icons
-setupDefaultLeafletIcon();
-
 interface MapViewProps {
   className?: string;
   mode: 'select' | 'draw';
@@ -114,6 +111,11 @@ const MapView = ({ className, mode, isSpraying, onAreasSelected }: MapViewProps)
     setSelectedAreas([]);
     onAreasSelected([]);
   };
+  
+  // Handle mode change
+  const handleModeChange = (newMode: 'select' | 'draw') => {
+    setDrawingMode(newMode);
+  };
 
   // Calculate total selected area
   const totalSelectedArea = selectedAreas.reduce((sum, area) => sum + area.area, 0);
@@ -126,6 +128,7 @@ const MapView = ({ className, mode, isSpraying, onAreasSelected }: MapViewProps)
           selectedAreasCount={selectedAreas.length}
           onAddRectangle={addRectangle}
           onClearSelections={clearSelections}
+          onModeChange={handleModeChange}
         />
       </CardHeader>
       <CardContent className="pt-0">

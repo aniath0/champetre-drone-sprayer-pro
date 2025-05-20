@@ -9,13 +9,15 @@ interface MapToolbarProps {
   selectedAreasCount: number;
   onAddRectangle: () => void;
   onClearSelections: () => void;
+  onModeChange?: (mode: 'select' | 'draw') => void;
 }
 
 const MapToolbar: React.FC<MapToolbarProps> = ({
   drawingMode,
   selectedAreasCount,
   onAddRectangle,
-  onClearSelections
+  onClearSelections,
+  onModeChange
 }) => {
   return (
     <>
@@ -47,6 +49,7 @@ const MapToolbar: React.FC<MapToolbarProps> = ({
             size="sm" 
             variant={drawingMode === 'draw' ? 'default' : 'outline'}
             className="h-8"
+            onClick={() => onModeChange && onModeChange('draw')}
           >
             <LassoSelect className="h-4 w-4 mr-1" />
             Délimiter
@@ -56,6 +59,7 @@ const MapToolbar: React.FC<MapToolbarProps> = ({
             size="sm" 
             variant={drawingMode === 'select' ? 'default' : 'outline'}
             className="h-8"
+            onClick={() => onModeChange && onModeChange('select')}
           >
             <MousePointerClick className="h-4 w-4 mr-1" />
             Sélectionner
