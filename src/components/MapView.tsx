@@ -72,6 +72,7 @@ const MapView: React.FC<MapViewProps> = ({ className, mode, isSpraying, onAreasS
   
   // Handle polygon selection
   const handlePolygonClick = (polygonId: string, positions: LatLngExpression[]) => {
+    console.log('Polygon clicked:', polygonId);
     if (drawingMode !== 'select') return;
     
     // Toggle selection

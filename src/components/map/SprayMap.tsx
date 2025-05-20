@@ -31,10 +31,14 @@ const SprayMap: React.FC<SprayMapProps> = ({
   useEffect(() => {
     setupDefaultLeafletIcon();
   }, []);
+
+  // Créer une clé unique pour forcer le rendu correct de MapContainer
+  const mapKey = `map-${center.join(',')}-${zoom}-${polygons.length}`;
   
   return (
     <div className="border border-dashed border-gray-300 rounded-md h-[300px] relative">
       <MapContainer 
+        key={mapKey}
         center={center}
         zoom={zoom}
         style={{ height: '100%', width: '100%' }}
