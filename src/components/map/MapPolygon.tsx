@@ -10,7 +10,6 @@ interface MapPolygonProps {
   onClick: (id: string, positions: LatLngExpression[]) => void;
 }
 
-// Corriger le problème avec la création de contextes React dans react-leaflet
 const MapPolygon: React.FC<MapPolygonProps> = ({ 
   id, 
   positions, 

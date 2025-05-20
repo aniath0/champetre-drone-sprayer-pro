@@ -1,9 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { MapPin } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -20,19 +20,6 @@ let DefaultIcon = L.icon({
 });
 
 L.Marker.prototype.options.icon = DefaultIcon;
-
-// Composant pour centrer la carte sur la position actuelle du drone
-const DroneCenterMap = ({ position }: { position: [number, number] }) => {
-  const map = useMap();
-  
-  useEffect(() => {
-    if (map) {
-      map.setView(position, map.getZoom());
-    }
-  }, [map, position]);
-  
-  return null;
-};
 
 interface FieldArea {
   id: string;
@@ -77,48 +64,9 @@ const SprayMap = ({ fields, onSelectField, currentDronePosition }: SprayMapProps
     iconSize: [18, 18],
     iconAnchor: [9, 9]
   });
-
-  // Components for markers to avoid context issues
-  const DroneMarker = () => {
-    if (!currentDronePosition) return null;
-    
-    return (
-      <Marker 
-        position={currentDronePosition} 
-        icon={droneIcon}
-      >
-        <Popup>Position actuelle du drone</Popup>
-      </Marker>
-    );
-  };
   
-  const FieldMarkers = () => {
-    return (
-      <>
-        {fields.map((field) => (
-          <Marker 
-            key={field.id} 
-            position={field.coordinates} 
-            icon={getMarkerIcon(field.status)}
-            eventHandlers={{
-              click: () => onSelectField(field)
-            }}
-          >
-            <Popup>
-              <div className="text-sm font-medium">{field.name}</div>
-              <div className="text-xs text-muted-foreground">
-                {field.size} ha · {field.status === 'completed' 
-                  ? 'Terminé' 
-                  : field.status === 'in-progress' 
-                    ? 'En cours' 
-                    : 'En attente'}
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-      </>
-    );
-  };
+  // Générer une clé unique pour forcer le bon rendu de MapContainer
+  const mapKey = `map-${mapCenter.join(',')}-${zoom}-${fields.length}`;
 
   return (
     <Card className="h-full">
@@ -135,6 +83,7 @@ const SprayMap = ({ fields, onSelectField, currentDronePosition }: SprayMapProps
       <CardContent className="p-0 relative">
         <div className="h-[350px] w-full rounded-md overflow-hidden">
           <MapContainer 
+            key={mapKey}
             center={mapCenter} 
             zoom={zoom} 
             style={{ height: '100%', width: '100%' }}
@@ -145,14 +94,35 @@ const SprayMap = ({ fields, onSelectField, currentDronePosition }: SprayMapProps
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             
-            <FieldMarkers />
-            <DroneMarker />
+            {fields.map((field) => (
+              <Marker 
+                key={field.id} 
+                position={field.coordinates} 
+                icon={getMarkerIcon(field.status)}
+                eventHandlers={{
+                  click: () => onSelectField(field)
+                }}
+              >
+                <Popup>
+                  <div className="text-sm font-medium">{field.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {field.size} ha · {field.status === 'completed' 
+                      ? 'Terminé' 
+                      : field.status === 'in-progress' 
+                        ? 'En cours' 
+                        : 'En attente'}
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
             
             {currentDronePosition && (
-              <DroneCenterMap 
-                key={`drone-center-${currentDronePosition.join(',')}`} 
+              <Marker 
                 position={currentDronePosition} 
-              />
+                icon={droneIcon}
+              >
+                <Popup>Position actuelle du drone</Popup>
+              </Marker>
             )}
           </MapContainer>
         </div>
