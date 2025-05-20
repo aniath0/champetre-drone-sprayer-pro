@@ -25,7 +25,7 @@ interface PolygonData {
   color: string;
 }
 
-const MapView = ({ className, mode, isSpraying, onAreasSelected }: MapViewProps) => {
+const MapView: React.FC<MapViewProps> = ({ className, mode, isSpraying, onAreasSelected }) => {
   const [mapCenter] = useState<[number, number]>([48.8566, 2.3522]); // Paris by default
   const zoom = 14;
   const [selectedAreas, setSelectedAreas] = useState<AreaData[]>([]);

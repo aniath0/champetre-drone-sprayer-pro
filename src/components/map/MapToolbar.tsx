@@ -19,6 +19,12 @@ const MapToolbar: React.FC<MapToolbarProps> = ({
   onClearSelections,
   onModeChange
 }) => {
+  const handleModeChange = (mode: 'select' | 'draw') => {
+    if (onModeChange) {
+      onModeChange(mode);
+    }
+  };
+  
   return (
     <>
       <div className="flex items-center justify-between">
@@ -49,7 +55,7 @@ const MapToolbar: React.FC<MapToolbarProps> = ({
             size="sm" 
             variant={drawingMode === 'draw' ? 'default' : 'outline'}
             className="h-8"
-            onClick={() => onModeChange && onModeChange('draw')}
+            onClick={() => handleModeChange('draw')}
           >
             <LassoSelect className="h-4 w-4 mr-1" />
             Délimiter
@@ -59,7 +65,7 @@ const MapToolbar: React.FC<MapToolbarProps> = ({
             size="sm" 
             variant={drawingMode === 'select' ? 'default' : 'outline'}
             className="h-8"
-            onClick={() => onModeChange && onModeChange('select')}
+            onClick={() => handleModeChange('select')}
           >
             <MousePointerClick className="h-4 w-4 mr-1" />
             Sélectionner
