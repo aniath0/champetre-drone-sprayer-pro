@@ -17,9 +17,7 @@ const MapPolygon: React.FC<MapPolygonProps> = ({
   onClick 
 }) => {
   const handleClick = () => {
-    if (onClick) {
-      onClick(id, positions);
-    }
+    onClick(id, positions);
   };
 
   return (

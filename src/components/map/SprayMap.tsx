@@ -32,6 +32,23 @@ const SprayMap: React.FC<SprayMapProps> = ({
     setupDefaultLeafletIcon();
   }, []);
   
+  // Components for polygons to avoid context issues
+  const PolygonElements = () => {
+    return (
+      <>
+        {polygons.map(polygon => (
+          <MapPolygon 
+            key={polygon.id}
+            id={polygon.id}
+            positions={polygon.positions}
+            color={polygon.color}
+            onClick={onPolygonClick}
+          />
+        ))}
+      </>
+    );
+  };
+  
   return (
     <div className="border border-dashed border-gray-300 rounded-md h-[300px] relative">
       <MapContainer 
@@ -45,15 +62,7 @@ const SprayMap: React.FC<SprayMapProps> = ({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         
-        {polygons.map(polygon => (
-          <MapPolygon 
-            key={polygon.id}
-            id={polygon.id}
-            positions={polygon.positions}
-            color={polygon.color}
-            onClick={onPolygonClick}
-          />
-        ))}
+        <PolygonElements />
       </MapContainer>
       
       {isSpraying && (

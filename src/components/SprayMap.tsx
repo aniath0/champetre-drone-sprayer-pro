@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapPin } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,11 +24,13 @@ L.Marker.prototype.options.icon = DefaultIcon;
 // Composant pour centrer la carte sur la position actuelle du drone
 const DroneCenterMap = ({ position }: { position: [number, number] }) => {
   const map = useMap();
-  React.useEffect(() => {
+  
+  useEffect(() => {
     if (map) {
       map.setView(position, map.getZoom());
     }
   }, [map, position]);
+  
   return null;
 };
 
@@ -76,6 +78,48 @@ const SprayMap = ({ fields, onSelectField, currentDronePosition }: SprayMapProps
     iconAnchor: [9, 9]
   });
 
+  // Components for markers to avoid context issues
+  const DroneMarker = () => {
+    if (!currentDronePosition) return null;
+    
+    return (
+      <Marker 
+        position={currentDronePosition} 
+        icon={droneIcon}
+      >
+        <Popup>Position actuelle du drone</Popup>
+      </Marker>
+    );
+  };
+  
+  const FieldMarkers = () => {
+    return (
+      <>
+        {fields.map((field) => (
+          <Marker 
+            key={field.id} 
+            position={field.coordinates} 
+            icon={getMarkerIcon(field.status)}
+            eventHandlers={{
+              click: () => onSelectField(field)
+            }}
+          >
+            <Popup>
+              <div className="text-sm font-medium">{field.name}</div>
+              <div className="text-xs text-muted-foreground">
+                {field.size} ha · {field.status === 'completed' 
+                  ? 'Terminé' 
+                  : field.status === 'in-progress' 
+                    ? 'En cours' 
+                    : 'En attente'}
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+      </>
+    );
+  };
+
   return (
     <Card className="h-full">
       <CardHeader>
@@ -101,45 +145,14 @@ const SprayMap = ({ fields, onSelectField, currentDronePosition }: SprayMapProps
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             
-            {/* Afficher les champs sur la carte */}
-            {fields.map((field) => (
-              <Marker 
-                key={field.id} 
-                position={field.coordinates} 
-                icon={getMarkerIcon(field.status)}
-                eventHandlers={{
-                  click: () => onSelectField(field)
-                }}
-              >
-                <Popup>
-                  <div className="text-sm font-medium">{field.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {field.size} ha · {field.status === 'completed' 
-                      ? 'Terminé' 
-                      : field.status === 'in-progress' 
-                        ? 'En cours' 
-                        : 'En attente'}
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
+            <FieldMarkers />
+            <DroneMarker />
             
-            {/* Afficher la position du drone si disponible */}
             {currentDronePosition && (
-              <>
-                <Marker 
-                  position={currentDronePosition} 
-                  icon={droneIcon}
-                  eventHandlers={{}}
-                >
-                  <Popup>Position actuelle du drone</Popup>
-                </Marker>
-                {/* Use the DroneCenterMap component conditionally with a key */}
-                <DroneCenterMap 
-                  key={`drone-center-${currentDronePosition.join(',')}`} 
-                  position={currentDronePosition} 
-                />
-              </>
+              <DroneCenterMap 
+                key={`drone-center-${currentDronePosition.join(',')}`} 
+                position={currentDronePosition} 
+              />
             )}
           </MapContainer>
         </div>
