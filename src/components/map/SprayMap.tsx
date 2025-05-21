@@ -20,7 +20,6 @@ interface SprayMapProps {
   onPolygonClick: (id: string, positions: LatLngExpression[]) => void;
 }
 
-// Important: Ensure this component only renders once per unique configuration
 const SprayMap: React.FC<SprayMapProps> = ({ 
   center, 
   zoom, 
@@ -40,6 +39,7 @@ const SprayMap: React.FC<SprayMapProps> = ({
         zoom={zoom}
         style={{ height: '100%', width: '100%' }}
         zoomControl={false}
+        key={`map-${center[0]}-${center[1]}-${zoom}`}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -69,4 +69,4 @@ const SprayMap: React.FC<SprayMapProps> = ({
   );
 };
 
-export default SprayMap;
+export default React.memo(SprayMap);

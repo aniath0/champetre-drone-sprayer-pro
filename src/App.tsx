@@ -10,7 +10,14 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 // Create QueryClient outside of the component to avoid re-creation
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+      refetchOnWindowFocus: false
+    }
+  }
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

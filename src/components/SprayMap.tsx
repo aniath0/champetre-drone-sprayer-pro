@@ -1,25 +1,13 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { MapPin } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for Leaflet icons in React
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
-
-// Define default icon for Leaflet
-let DefaultIcon = L.icon({
-  iconUrl: icon,
-  shadowUrl: iconShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41]
-});
-
-L.Marker.prototype.options.icon = DefaultIcon;
 
 interface FieldArea {
   id: string;
@@ -35,36 +23,115 @@ interface SprayMapProps {
   currentDronePosition?: [number, number];
 }
 
+// Import dynamically to avoid issues with SSR
 const SprayMap = ({ fields, onSelectField, currentDronePosition }: SprayMapProps) => {
-  // Using only React.useState to avoid potential hooks issues
-  const mapCenter = React.useState<[number, number]>([48.8566, 2.3522])[0]; // Paris by default
+  const [isClient, setIsClient] = useState(false);
+  const mapCenter: [number, number] = [48.8566, 2.3522]; // Paris by default
   const zoom = 14;
 
-  // Custom icons for different statuses
-  const getMarkerIcon = (status: string) => {
-    const iconColor = status === 'completed' 
-      ? '#10B981' // Green for completed
-      : status === 'in-progress'
-        ? '#F97316' // Orange for in-progress
-        : '#9b87f5'; // Purple for pending
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Cette fonction sera utilisée pour rendre la carte une fois que nous sommes côté client
+  const renderMap = () => {
+    if (!isClient) {
+      return (
+        <div className="h-[350px] w-full rounded-md overflow-hidden flex items-center justify-center bg-gray-100">
+          <p>Chargement de la carte...</p>
+        </div>
+      );
+    }
     
-    return L.divIcon({
-      className: 'custom-marker',
-      html: `<div style="background-color: ${iconColor}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.4);"></div>`,
-      iconSize: [20, 20],
-      iconAnchor: [10, 10]
+    // Nous importons et utilisons les composants react-leaflet de façon dynamique
+    const { MapContainer, TileLayer, Marker, Popup } = require('react-leaflet');
+    const L = require('leaflet');
+    
+    // Define default icon for Leaflet
+    let DefaultIcon = L.icon({
+      iconUrl: icon,
+      shadowUrl: iconShadow,
+      iconSize: [25, 41],
+      iconAnchor: [12, 41]
     });
+
+    L.Marker.prototype.options.icon = DefaultIcon;
+    
+    // Custom icons for different statuses
+    const getMarkerIcon = (status: string) => {
+      const iconColor = status === 'completed' 
+        ? '#10B981' // Green for completed
+        : status === 'in-progress'
+          ? '#F97316' // Orange for in-progress
+          : '#9b87f5'; // Purple for pending
+      
+      return L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="background-color: ${iconColor}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.4);"></div>`,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
+      });
+    };
+    
+    // Special icon for drone
+    const droneIcon = L.divIcon({
+      className: 'drone-marker',
+      html: `<div style="background-color: #F43F5E; width: 18px; height: 18px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;">
+               <div style="background-color: white; width: 4px; height: 4px; border-radius: 50%;"></div>
+             </div>`,
+      iconSize: [18, 18],
+      iconAnchor: [9, 9]
+    });
+    
+    return (
+      <div className="h-[350px] w-full rounded-md overflow-hidden">
+        <MapContainer 
+          key={`map-${Date.now()}`} 
+          center={mapCenter} 
+          zoom={zoom} 
+          style={{ height: '100%', width: '100%' }}
+          zoomControl={false}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          
+          {fields.map((field) => (
+            <Marker 
+              key={field.id} 
+              position={field.coordinates} 
+              icon={getMarkerIcon(field.status)}
+              eventHandlers={{
+                click: () => onSelectField(field)
+              }}
+            >
+              <Popup>
+                <div className="text-sm font-medium">{field.name}</div>
+                <div className="text-xs text-muted-foreground">
+                  {field.size} ha · {field.status === 'completed' 
+                    ? 'Terminé' 
+                    : field.status === 'in-progress' 
+                      ? 'En cours' 
+                      : 'En attente'}
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+          
+          {currentDronePosition && (
+            <Marker 
+              key={`drone-${Date.now()}`}
+              position={currentDronePosition} 
+              icon={droneIcon}
+            >
+              <Popup>Position actuelle du drone</Popup>
+            </Marker>
+          )}
+        </MapContainer>
+      </div>
+    );
   };
-  
-  // Special icon for drone
-  const droneIcon = L.divIcon({
-    className: 'drone-marker',
-    html: `<div style="background-color: #F43F5E; width: 18px; height: 18px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;">
-             <div style="background-color: white; width: 4px; height: 4px; border-radius: 50%;"></div>
-           </div>`,
-    iconSize: [18, 18],
-    iconAnchor: [9, 9]
-  });
 
   return (
     <Card className="h-full">
@@ -79,52 +146,7 @@ const SprayMap = ({ fields, onSelectField, currentDronePosition }: SprayMapProps
         <CardDescription>Vue des zones à pulvériser</CardDescription>
       </CardHeader>
       <CardContent className="p-0 relative">
-        <div className="h-[350px] w-full rounded-md overflow-hidden">
-          <MapContainer 
-            key={`map-${Date.now()}`} 
-            center={mapCenter} 
-            zoom={zoom} 
-            style={{ height: '100%', width: '100%' }}
-            zoomControl={false}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            
-            {fields.map((field) => (
-              <Marker 
-                key={field.id} 
-                position={field.coordinates} 
-                icon={getMarkerIcon(field.status)}
-                eventHandlers={{
-                  click: () => onSelectField(field)
-                }}
-              >
-                <Popup>
-                  <div className="text-sm font-medium">{field.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {field.size} ha · {field.status === 'completed' 
-                      ? 'Terminé' 
-                      : field.status === 'in-progress' 
-                        ? 'En cours' 
-                        : 'En attente'}
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-            
-            {currentDronePosition && (
-              <Marker 
-                key={`drone-${Date.now()}`}
-                position={currentDronePosition} 
-                icon={droneIcon}
-              >
-                <Popup>Position actuelle du drone</Popup>
-              </Marker>
-            )}
-          </MapContainer>
-        </div>
+        {renderMap()}
         
         {/* Available zones list */}
         <div className="absolute bottom-4 left-4 right-4 bg-white/90 dark:bg-gray-800/90 p-3 rounded-md shadow-md">
@@ -149,4 +171,4 @@ const SprayMap = ({ fields, onSelectField, currentDronePosition }: SprayMapProps
   );
 };
 
-export default SprayMap;
+export default React.memo(SprayMap);

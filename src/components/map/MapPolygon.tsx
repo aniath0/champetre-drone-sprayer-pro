@@ -17,6 +17,7 @@ const MapPolygon: React.FC<MapPolygonProps> = ({ id, positions, color, onClick }
 
   return (
     <Polygon 
+      key={`polygon-${id}`}
       positions={positions}
       pathOptions={{
         color: color,
@@ -31,4 +32,4 @@ const MapPolygon: React.FC<MapPolygonProps> = ({ id, positions, color, onClick }
   );
 };
 
-export default MapPolygon;
+export default React.memo(MapPolygon);
