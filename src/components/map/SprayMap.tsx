@@ -20,6 +20,7 @@ interface SprayMapProps {
   onPolygonClick: (id: string, positions: LatLngExpression[]) => void;
 }
 
+// Important: Ensure this component only renders once per unique configuration
 const SprayMap: React.FC<SprayMapProps> = ({ 
   center, 
   zoom, 
@@ -35,7 +36,6 @@ const SprayMap: React.FC<SprayMapProps> = ({
   return (
     <div className="border border-dashed border-gray-300 rounded-md h-[300px] relative">
       <MapContainer 
-        key={`map-${Date.now()}`}
         center={center}
         zoom={zoom}
         style={{ height: '100%', width: '100%' }}

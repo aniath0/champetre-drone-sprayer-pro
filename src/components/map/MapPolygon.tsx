@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Polygon } from 'react-leaflet';
 import { LatLngExpression } from 'leaflet';
 
@@ -10,17 +10,10 @@ interface MapPolygonProps {
   onClick: (id: string, positions: LatLngExpression[]) => void;
 }
 
-const MapPolygon: React.FC<MapPolygonProps> = ({ 
-  id, 
-  positions, 
-  color, 
-  onClick 
-}) => {
-  // Using direct function reference instead of useCallback
-  // to simplify and avoid potential context issues
-  const handleClick = () => {
+const MapPolygon: React.FC<MapPolygonProps> = ({ id, positions, color, onClick }) => {
+  const handleClick = useCallback(() => {
     onClick(id, positions);
-  };
+  }, [id, positions, onClick]);
 
   return (
     <Polygon 

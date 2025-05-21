@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { calculatePolygonArea } from '@/utils/mapUtils';
 import SprayMap from './map/SprayMap';
@@ -33,12 +33,12 @@ const MapView: React.FC<MapViewProps> = ({ className, mode, isSpraying, onAreasS
   const [polygons, setPolygons] = useState<PolygonData[]>([]);
   
   // Update drawing mode when prop changes
-  React.useEffect(() => {
+  useEffect(() => {
     setDrawingMode(mode);
   }, [mode]);
   
   // Add a rectangular selection zone
-  const addRectangle = () => {
+  const addRectangle = useCallback(() => {
     const centerLat = mapCenter[0];
     const centerLng = mapCenter[1];
     const offset = 0.005; // Approximately 500m depending on latitude
@@ -67,10 +67,10 @@ const MapView: React.FC<MapViewProps> = ({ className, mode, isSpraying, onAreasS
     const updatedSelectedAreas = [...selectedAreas, newSelectedArea];
     setSelectedAreas(updatedSelectedAreas);
     onAreasSelected(updatedSelectedAreas);
-  };
+  }, [mapCenter, selectedAreas, onAreasSelected]);
   
   // Handle polygon selection
-  const handlePolygonClick = (polygonId: string, positions: LatLngExpression[]) => {
+  const handlePolygonClick = useCallback((polygonId: string, positions: LatLngExpression[]) => {
     console.log('Polygon clicked:', polygonId);
     if (drawingMode !== 'select') return;
     
@@ -103,19 +103,19 @@ const MapView: React.FC<MapViewProps> = ({ className, mode, isSpraying, onAreasS
         p.id === polygonId ? { ...p, color: '#1E40AF' } : p
       ));
     }
-  };
+  }, [drawingMode, selectedAreas, polygons, onAreasSelected]);
   
   // Clear all selections
-  const clearSelections = () => {
+  const clearSelections = useCallback(() => {
     setPolygons([]);
     setSelectedAreas([]);
     onAreasSelected([]);
-  };
+  }, [onAreasSelected]);
   
   // Handle mode change
-  const handleModeChange = (newMode: 'select' | 'draw') => {
+  const handleModeChange = useCallback((newMode: 'select' | 'draw') => {
     setDrawingMode(newMode);
-  };
+  }, []);
 
   // Calculate total selected area
   const totalSelectedArea = selectedAreas.reduce((sum, area) => sum + area.area, 0);
