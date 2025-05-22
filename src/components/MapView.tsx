@@ -69,24 +69,54 @@ const MapView: React.FC<MapViewProps> = ({ className, mode, isSpraying, onAreasS
     onAreasSelected(updatedSelectedAreas);
   }, [mapCenter, selectedAreas, onAreasSelected]);
   
-  // Handle polygon selection
+  // Handle polygon selection or creation
   const handlePolygonClick = useCallback((polygonId: string, positions: LatLngExpression[]) => {
-    console.log('Polygon clicked:', polygonId);
-    if (drawingMode !== 'select') return;
+    console.log('Polygon clicked or created:', polygonId);
     
-    // Toggle selection
-    const isSelected = selectedAreas.some(area => area.id === polygonId);
+    // Check if this is a new polygon (from drawing) or an existing one
+    const isExistingPolygon = polygons.some(p => p.id === polygonId);
     
-    if (isSelected) {
-      const filtered = selectedAreas.filter(area => area.id !== polygonId);
-      setSelectedAreas(filtered);
-      onAreasSelected(filtered);
+    if (isExistingPolygon && drawingMode === 'select') {
+      // Toggle selection for existing polygon
+      const isSelected = selectedAreas.some(area => area.id === polygonId);
       
-      // Update polygon color
-      setPolygons(polygons.map(p => 
-        p.id === polygonId ? { ...p, color: '#3B82F6' } : p
-      ));
-    } else {
+      if (isSelected) {
+        const filtered = selectedAreas.filter(area => area.id !== polygonId);
+        setSelectedAreas(filtered);
+        onAreasSelected(filtered);
+        
+        // Update polygon color
+        setPolygons(polygons.map(p => 
+          p.id === polygonId ? { ...p, color: '#3B82F6' } : p
+        ));
+      } else {
+        const polygonArea = calculatePolygonArea(positions);
+        const newSelectedArea = {
+          id: polygonId,
+          type: 'polygon',
+          area: polygonArea
+        };
+        
+        const updated = [...selectedAreas, newSelectedArea];
+        setSelectedAreas(updated);
+        onAreasSelected(updated);
+        
+        // Update polygon color to indicate selection
+        setPolygons(polygons.map(p => 
+          p.id === polygonId ? { ...p, color: '#1E40AF' } : p
+        ));
+      }
+    } else if (!isExistingPolygon) {
+      // This is a new drawn polygon, add it
+      const newPolygon = {
+        id: polygonId,
+        positions: positions,
+        color: '#3B82F6'
+      };
+      
+      setPolygons(prev => [...prev, newPolygon]);
+      
+      // Calculate area and add to selected areas
       const polygonArea = calculatePolygonArea(positions);
       const newSelectedArea = {
         id: polygonId,
@@ -97,11 +127,6 @@ const MapView: React.FC<MapViewProps> = ({ className, mode, isSpraying, onAreasS
       const updated = [...selectedAreas, newSelectedArea];
       setSelectedAreas(updated);
       onAreasSelected(updated);
-      
-      // Update polygon color to indicate selection
-      setPolygons(polygons.map(p => 
-        p.id === polygonId ? { ...p, color: '#1E40AF' } : p
-      ));
     }
   }, [drawingMode, selectedAreas, polygons, onAreasSelected]);
   
