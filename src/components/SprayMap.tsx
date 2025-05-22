@@ -4,7 +4,6 @@ import { MapPin } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import 'leaflet/dist/leaflet.css';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 
 // Fix for Leaflet icons in React
@@ -29,107 +28,89 @@ const SprayMap = ({ fields, onSelectField, currentDronePosition }: SprayMapProps
   const [isClient, setIsClient] = useState(false);
   const mapCenter: [number, number] = [48.8566, 2.3522]; // Paris by default
   const zoom = 14;
+  const mapRef = React.useRef<HTMLDivElement>(null);
+  const leafletMap = React.useRef<L.Map | null>(null);
 
+  // Initialize map on client-side only
   useEffect(() => {
     setIsClient(true);
-
-    // Define default icon for Leaflet
+    
+    if (!mapRef.current || leafletMap.current) return;
+    
+    // Set up default marker icon
     const DefaultIcon = L.icon({
       iconUrl: icon,
       shadowUrl: iconShadow,
       iconSize: [25, 41],
       iconAnchor: [12, 41]
     });
-
     L.Marker.prototype.options.icon = DefaultIcon;
-  }, []);
-
-  // Cette fonction sera utilisée pour rendre la carte une fois que nous sommes côté client
-  const renderMap = () => {
-    if (!isClient) {
-      return (
-        <div className="h-[350px] w-full rounded-md overflow-hidden flex items-center justify-center bg-gray-100">
-          <p>Chargement de la carte...</p>
-        </div>
-      );
-    }
     
-    // Custom icons for different statuses
-    const getMarkerIcon = (status: string) => {
-      const iconColor = status === 'completed' 
+    // Create the map
+    leafletMap.current = L.map(mapRef.current).setView(mapCenter, zoom);
+    
+    // Add tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(leafletMap.current);
+    
+    // Add field markers
+    fields.forEach(field => {
+      const iconColor = field.status === 'completed' 
         ? '#10B981' // Green for completed
-        : status === 'in-progress'
+        : field.status === 'in-progress'
           ? '#F97316' // Orange for in-progress
           : '#9b87f5'; // Purple for pending
       
-      return L.divIcon({
+      const markerIcon = L.divIcon({
         className: 'custom-marker',
         html: `<div style="background-color: ${iconColor}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.4);"></div>`,
         iconSize: [20, 20],
         iconAnchor: [10, 10]
       });
-    };
-    
-    // Special icon for drone
-    const droneIcon = L.divIcon({
-      className: 'drone-marker',
-      html: `<div style="background-color: #F43F5E; width: 18px; height: 18px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;">
-               <div style="background-color: white; width: 4px; height: 4px; border-radius: 50%;"></div>
-             </div>`,
-      iconSize: [18, 18],
-      iconAnchor: [9, 9]
+      
+      const marker = L.marker(field.coordinates, { icon: markerIcon })
+        .addTo(leafletMap.current!)
+        .bindPopup(`
+          <div class="text-sm font-medium">${field.name}</div>
+          <div class="text-xs text-muted-foreground">
+            ${field.size} ha · ${field.status === 'completed' 
+              ? 'Terminé' 
+              : field.status === 'in-progress' 
+                ? 'En cours' 
+                : 'En attente'}
+          </div>
+        `);
+      
+      marker.on('click', () => {
+        onSelectField(field);
+      });
     });
     
-    return (
-      <div className="h-[350px] w-full rounded-md overflow-hidden">
-        <MapContainer 
-          key={`map-${Date.now()}`} 
-          center={mapCenter} 
-          zoom={zoom} 
-          style={{ height: '100%', width: '100%' }}
-          zoomControl={false}
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          
-          {fields.map((field) => (
-            <Marker 
-              key={field.id} 
-              position={field.coordinates} 
-              icon={getMarkerIcon(field.status)}
-              eventHandlers={{
-                click: () => onSelectField(field)
-              }}
-            >
-              <Popup>
-                <div className="text-sm font-medium">{field.name}</div>
-                <div className="text-xs text-muted-foreground">
-                  {field.size} ha · {field.status === 'completed' 
-                    ? 'Terminé' 
-                    : field.status === 'in-progress' 
-                      ? 'En cours' 
-                      : 'En attente'}
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-          
-          {currentDronePosition && (
-            <Marker 
-              key={`drone-${Date.now()}`}
-              position={currentDronePosition} 
-              icon={droneIcon}
-            >
-              <Popup>Position actuelle du drone</Popup>
-            </Marker>
-          )}
-        </MapContainer>
-      </div>
-    );
-  };
-
+    // Add drone marker if exists
+    if (currentDronePosition) {
+      const droneIcon = L.divIcon({
+        className: 'drone-marker',
+        html: `<div style="background-color: #F43F5E; width: 18px; height: 18px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;">
+                <div style="background-color: white; width: 4px; height: 4px; border-radius: 50%;"></div>
+              </div>`,
+        iconSize: [18, 18],
+        iconAnchor: [9, 9]
+      });
+      
+      L.marker(currentDronePosition, { icon: droneIcon })
+        .addTo(leafletMap.current!)
+        .bindPopup('Position actuelle du drone');
+    }
+    
+    return () => {
+      if (leafletMap.current) {
+        leafletMap.current.remove();
+        leafletMap.current = null;
+      }
+    };
+  }, [fields, currentDronePosition, mapCenter, zoom, onSelectField]);
+  
   return (
     <Card className="h-full">
       <CardHeader>
@@ -143,7 +124,15 @@ const SprayMap = ({ fields, onSelectField, currentDronePosition }: SprayMapProps
         <CardDescription>Vue des zones à pulvériser</CardDescription>
       </CardHeader>
       <CardContent className="p-0 relative">
-        {renderMap()}
+        {!isClient ? (
+          <div className="h-[350px] w-full rounded-md overflow-hidden flex items-center justify-center bg-gray-100">
+            <p>Chargement de la carte...</p>
+          </div>
+        ) : (
+          <div className="h-[350px] w-full rounded-md overflow-hidden">
+            <div ref={mapRef} style={{ height: '100%', width: '100%' }} />
+          </div>
+        )}
         
         {/* Available zones list */}
         <div className="absolute bottom-4 left-4 right-4 bg-white/90 dark:bg-gray-800/90 p-3 rounded-md shadow-md">
@@ -168,4 +157,4 @@ const SprayMap = ({ fields, onSelectField, currentDronePosition }: SprayMapProps
   );
 };
 
-export default React.memo(SprayMap);
+export default SprayMap;
