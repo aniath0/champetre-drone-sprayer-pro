@@ -4,6 +4,8 @@ import { MapPin } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import 'leaflet/dist/leaflet.css';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
 
 // Fix for Leaflet icons in React
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -23,7 +25,6 @@ interface SprayMapProps {
   currentDronePosition?: [number, number];
 }
 
-// Import dynamically to avoid issues with SSR
 const SprayMap = ({ fields, onSelectField, currentDronePosition }: SprayMapProps) => {
   const [isClient, setIsClient] = useState(false);
   const mapCenter: [number, number] = [48.8566, 2.3522]; // Paris by default
@@ -31,6 +32,16 @@ const SprayMap = ({ fields, onSelectField, currentDronePosition }: SprayMapProps
 
   useEffect(() => {
     setIsClient(true);
+
+    // Define default icon for Leaflet
+    const DefaultIcon = L.icon({
+      iconUrl: icon,
+      shadowUrl: iconShadow,
+      iconSize: [25, 41],
+      iconAnchor: [12, 41]
+    });
+
+    L.Marker.prototype.options.icon = DefaultIcon;
   }, []);
 
   // Cette fonction sera utilisée pour rendre la carte une fois que nous sommes côté client
@@ -42,20 +53,6 @@ const SprayMap = ({ fields, onSelectField, currentDronePosition }: SprayMapProps
         </div>
       );
     }
-    
-    // Nous importons et utilisons les composants react-leaflet de façon dynamique
-    const { MapContainer, TileLayer, Marker, Popup } = require('react-leaflet');
-    const L = require('leaflet');
-    
-    // Define default icon for Leaflet
-    let DefaultIcon = L.icon({
-      iconUrl: icon,
-      shadowUrl: iconShadow,
-      iconSize: [25, 41],
-      iconAnchor: [12, 41]
-    });
-
-    L.Marker.prototype.options.icon = DefaultIcon;
     
     // Custom icons for different statuses
     const getMarkerIcon = (status: string) => {
